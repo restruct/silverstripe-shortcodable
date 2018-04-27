@@ -2,6 +2,7 @@
 
 namespace Silverstripe\Shortcodable\Controller;
 
+use SilverStripe\ORM\DataObject;
 use Silverstripe\Shortcodable;
 use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Control\Controller;
@@ -229,7 +230,7 @@ class ShortcodableController extends LeftAndMain
             return;
         }
 
-        if ($id && is_subclass_of($classname, 'DataObject')) {
+        if ($id && is_subclass_of($classname, DataObject::class)) {
             $object = $classname::get()->byID($id);
         } else {
             $object = singleton($classname);

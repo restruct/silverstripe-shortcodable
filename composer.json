@@ -6,7 +6,7 @@
         "silverstripe",
         "shortcode"
     ],
-    "license": "BSD License",
+    "license": "BSD",
     "authors": [
         {
             "name": "Restruct",

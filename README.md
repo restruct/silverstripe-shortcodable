@@ -78,17 +78,17 @@ public function getShortcodePlaceHolder($attributes)
 
 ## Status
 
--[x] TinyMCE button/plugin
--[x] Shortcode form in popup dialog
--[x] Custom/configurable shortcode independent of class name
--[x] Custom/configurable shortcode parser callback methods
--[x] Inserting new & editing existing shortcode (+undo)
--[x] Re-implement DataObjects as shortcodable (incl. getShortcodableRecords etc)
--[x] Re-implement placeholders
--[ ] Check/re-implement(?) [BOM fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/5) and in [ShortcodeController](https://github.com/sheadawson/silverstripe-shortcodable/blob/master/src/Controller/ShortcodableController.php#L240)
--[ ] Check/re-implement(?) [P/DIV wrapper fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/51/files)
--[ ] Check/implement(?) [wrapping shortcodes](https://github.com/sheadawson/silverstripe-shortcodable/pull/73)
--[ ] ...
+- [x] TinyMCE button/plugin
+- [x] Shortcode form in popup dialog
+- [x] Custom/configurable shortcode independent of class name
+- [x] Custom/configurable shortcode parser callback methods
+- [x] Inserting new & editing existing shortcode (+undo)
+- [x] Re-implement DataObjects as shortcodable (incl. getShortcodableRecords etc)
+- [x] Re-implement placeholders
+- [ ] Check/re-implement(?) [BOM fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/5) and in [ShortcodeController](https://github.com/sheadawson/silverstripe-shortcodable/blob/master/src/Controller/ShortcodableController.php#L240)
+- [ ] Check/re-implement(?) [P/DIV wrapper fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/51/files)
+- [ ] Check/implement(?) [wrapping shortcodes](https://github.com/sheadawson/silverstripe-shortcodable/pull/73)
+- [ ] ...
 
 
 ## Refs:

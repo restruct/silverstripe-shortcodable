@@ -4,7 +4,7 @@ Adds a ![](docs/screens/button.png) button to HTMLEditorField for CMS users to i
 (TODO:) Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 
 ![](docs/screens/dialog.png)
-This module is a SS4-ish partly rewrite of sheadawson/silverstripe-shortcodable.
+This module is a SS4 partial to largely rewrite of sheadawson/silverstripe-shortcodable.
 
 ## Configuration
 Register DataObjects or classes as shortcodable via Yaml config:

@@ -1,12 +1,12 @@
 {
     "name": "restruct/silverstripe-shortcodable",
-    "type": "silverstripe-vendormodule",
     "description": "Provides a simple button to insert Shortcodes into the HTMLEditorField + an API for developers to define shortcodes",
+    "type": "silverstripe-vendormodule",
     "keywords": [
         "silverstripe",
         "shortcode"
     ],
-    "license": "BSD License",
+    "license": "BSD",
     "authors": [
         {
             "name": "Restruct",
@@ -18,8 +18,12 @@
         }
     ],
     "require": {
+        "silverstripe/vendor-plugin": "^1.0",
         "silverstripe/framework": "^4",
         "restruct/silverstripe-simpler": "^0.1"
+    },
+    "replace": {
+        "sheadawson/silverstripe-shortcodable": "*"
     },
     "autoload": {
         "psr-4": {

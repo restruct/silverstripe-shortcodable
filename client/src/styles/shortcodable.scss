@@ -1,0 +1,108 @@
+///// SOME SVG FUNCTIONS copied from Bootstrap /////
+// Characters which are escaped by the escape-svg function
+$escaped-characters: (
+        ('<', '%3c'),
+        ('>', '%3e'),
+        ('#', '%23'),
+);
+// See https://codepen.io/kevinweber/pen/dXWoRw
+// Requires the use of quotes around data URIs.
+@function escape-svg($string) {
+    @if str-index($string, "data:image/svg+xml") {
+        @each $char, $encoded in $escaped-characters {
+            // Do not escape the url brackets
+            @if str-index($string, "url(") == 1 {
+                $string: url("#{str-replace(str-slice($string, 6, -3), $char, $encoded)}");
+            } @else {
+                $string: str-replace($string, $char, $encoded);
+            }
+        }
+    }
+
+    @return $string;
+}
+// Replace `$search` with `$replace` in `$string`
+// Used on our SVG icon backgrounds for custom forms.
+//
+// @author Hugo Giraudel
+// @param {String} $string - Initial string
+// @param {String} $search - Substring to replace
+// @param {String} $replace ('') - New value
+// @return {String} - Updated string
+@function str-replace($string, $search, $replace: "") {
+    $index: str-index($string, $search);
+
+    @if $index {
+        @return str-slice($string, 1, $index - 1) + $replace + str-replace(str-slice($string, $index + str-length($search)), $search, $replace);
+    }
+
+    @return $string;
+}
+
+///// Editor button
+
+.mce-shortcodable .mce-i-shortcodable {
+	//background: url(../../../docs/screens/button.png) no-repeat center center;
+	//background: url('../../imgs/shortcode-icon.svg') no-repeat center center;
+    $color: #43536d;
+    $escsvg: escape-svg('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="#{$color}"><path d="M 0 0 L 0 16 L 5.34375 16 L 5.34375 14.414062 L 1.5859375 14.414062 L 1.5859375 1.5859375 L 5.34375 1.5859375 L 5.34375 0 L 0 0 z M 10.65625 0 L 10.65625 1.5859375 L 14.414062 1.5859375 L 14.414062 14.414062 L 10.65625 14.414062 L 10.65625 16 L 16 16 L 16 0 L 10.65625 0 z" /></svg>');
+    background-image: url($escsvg);
+    background-repeat: no-repeat;
+    background-size: contain;
+
+    width: 16px;
+    height: 16px;
+    color: transparent;
+}
+
+
+///// MODAL/FORM
+#Form_ShortcodeForm {
+    //.form-group--no-label {
+    //    border-bottom: 1px solid #dbe0e9;
+    //    padding-bottom: 1rem;
+    //}
+    .fieldRow {
+        //padding: 1rem 0;
+        .field {
+            padding-left: 15rem;
+            padding-top: .8rem;
+            padding-bottom: .8rem;
+            border-bottom: 1px solid #dbe0e9;
+            &.shortcode-type {
+                padding-left: 0;
+                padding-top: 0;
+                border-bottom: none;
+
+                .middleColumn {
+                    //box-shadow: 0 0 0 4px #f4f6f8;
+                    box-shadow: 0 0 0 2px #c1cad9;
+                    border-radius: 3px;
+                }
+            }
+
+            label.left {
+                float: left;
+                margin-left: -15rem;
+                max-width: 15rem;
+                padding-top: .8rem;
+                padding-right: .5rem;
+                line-height: 1.2;
+            }
+            &.checkbox {
+                margin-top: .4rem;
+            }
+        }
+        #Form_ShortcodeForm_ShortCodeHeading {
+            margin-bottom: .4rem;
+            margin-top: .8rem;
+            border-top: 1px solid #dbe0e9;
+            padding-top: 1rem;
+        }
+    }
+
+    .form-actions {
+        margin-top: 1.5rem;
+        margin-bottom: -1rem;
+    }
+}

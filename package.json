@@ -1,0 +1,30 @@
+{
+  "name": "base-package-json",
+  "description": "Base package json",
+  "scripts": {
+    "development": "mix",
+    "watch": "mix watch",
+    "watch-poll": "mix watch -- --watch-options-poll=1000",
+    "hot": "mix watch --hot",
+    "prod": "mix --production -- --watch",
+    "production": "mix --production"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.0.0-0",
+    "@babel/preset-react": "^7.12.5",
+    "laravel-mix": "^6.0.11",
+    "postcss": "^8.1",
+    "resolve-url-loader": "^3.1.2",
+    "sass": "^1.32.13",
+    "sass-loader": "^11.0.1",
+    "webpack": "^5.0.0"
+  },
+  "dependencies": {
+    "jquery": "^3.6.0"
+  },
+  "version": "1.0.0",
+  "main": "webpack.mix.js",
+  "keywords": []
+}

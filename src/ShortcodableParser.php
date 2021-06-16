@@ -1,6 +1,6 @@
 <?php
 
-namespace Silverstripe\Shortcodable;
+namespace Shortcodable;
 
 use SilverStripe\View\ViewableData;
 
@@ -15,7 +15,7 @@ class ShortcodableParser extends ViewableData
     /**
      * @var array
      */
-    protected $shortcodes = array();
+    protected $shortcodes = [];
 
     /**
      * @param string $name
@@ -45,11 +45,11 @@ class ShortcodableParser extends ViewableData
     {
         $content = preg_match_all('/([^ =]*)=(\'([^\']*)\'|\"([^\"]*)\"|([^ ]*))/', trim($content), $c);
         list($dummy, $keys, $values) = array_values($c);
-        $c = array();
+        $c = [];
         foreach ($keys as $key => $value) {
             $value = trim($values[ $key ], "\"'");
             $type = is_numeric($value) ? 'int' : 'string';
-            $type = in_array(strtolower($value), array('true', 'false')) ? 'bool' : $type;
+            $type = in_array(strtolower($value), ['true', 'false']) ? 'bool' : $type;
             switch ($type) {
                 case 'int': $value = (int) $value; break;
                 case 'bool': $value = strtolower($value) == 'true'; break;
@@ -72,14 +72,14 @@ class ShortcodableParser extends ViewableData
         $t = array_filter($this->get_pattern($text));
         if (!empty($t)) {
             list($d, $d, $parents, $atts, $d, $contents) = $patts;
-            $out2 = array();
+            $out2 = [];
             $n = 0;
             foreach ($parents as $k => $parent) {
                 ++$n;
                 $name = $child ? 'child'.$n : $n;
                 $t = array_filter($this->get_pattern($contents[ $k ]));
                 $t_s = $this->the_shortcodes($out2, $contents[ $k ], true);
-                $output[ $name ] = array('name' => $parents[ $k ]);
+                $output[ $name ] = ['name' => $parents[ $k ]];
                 $output[ $name ]['atts'] = $this->parse_atts($atts[ $k ]);
                 $output[ $name ]['original_content'] = $contents[ $k ];
                 $output[ $name ]['content'] = !empty($t) && !empty($t_s) ? $t_s : $contents[ $k ];

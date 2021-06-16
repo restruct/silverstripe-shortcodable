@@ -1,29 +1,32 @@
 ---
 Name: shortcodable
-After:
-    - framework/*
-    # - cms/*
 ---
-
-LeftAndMain:
+SilverStripe\Admin\LeftAndMain:
   extra_requirements_javascript:
-    - 'resources/shortcodable/javascript/editor_plugin.js'
-    - 'resources/shortcodable/javascript/shortcodable.js'
+    - 'restruct/silverstripe-shortcodable:client/dist/js/editor_plugin.js'
+    - 'restruct/silverstripe-shortcodable:client/dist/js/shortcodable.js'
   extra_requirements_css:
-    - 'shortcodable/css/shortcodable.css'
+    - 'restruct/silverstripe-shortcodable:client/dist/styles/shortcodable.css'
 
-SilverStripe\Control\Director:
-  rules:
-    'admin/shortcodable': Silverstripe\Shortcodable\Controller\ShortcodableController
-
-Shortcodable:
+Shortcodable\Shortcodable:
   htmleditor_names:
     - cms
 
-HtmlEditorField:
-  extensions:
-    - ShortcodableHtmlEditorField
+SilverStripe\Control\Director:
+  rules:
+    'admin/shortcodable': Shortcodable\Controllers\ShortcodableAdminController
 
-ShortcodeParser:
+SilverStripe\Forms\HTMLEditor\HTMLEditorField:
   extensions:
-    - ShortcodableShortcodeParserExtension
+    - Shortcodable\Extensions\HtmlEditorFieldExtension
+
+#Restruct\Silverstripe\AdminTweaks\Shortcodes\FeaturedImageShortcode:
+#  extensions:
+#    - Shortcodable\Extensions\ShortcodableTestExtension
+#SilverStripe\Admin\LeftAndMain:
+#  extensions:
+#    - Silverstripe\Shortcodable\Extensions\LeftAndMainExtension
+#
+#Silverstripe\Shortcodable\ShortcodeParser:
+#  extensions:
+#    - Silverstripe\Shortcodable\ShortcodableShortcodeParserExtension

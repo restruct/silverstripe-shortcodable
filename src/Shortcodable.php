@@ -1,11 +1,11 @@
 <?php
 
-namespace Silverstripe;
+namespace Shortcodable;
 
-use SilverStripe\View\ViewableData;
-use SilverStripe\View\Parsers\ShortcodeParser;
+use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
-use Silverstripe\Shortcodable\ShortcodableParser;
+use SilverStripe\Core\Config\Configurable;
+use SilverStripe\View\Parsers\ShortcodeParser;
 
 /**
  * Shortcodable
@@ -13,11 +13,17 @@ use Silverstripe\Shortcodable\ShortcodableParser;
  *
  * @author shea@livesource.co.nz
  **/
-class Shortcodable extends ViewableData
+class Shortcodable
 {
-    private static $shortcodable_classes = array();
+    use Configurable;
 
-    public static function register_classes($classes)
+    /** @Config array editor configs to include Shortcodable on/in */
+    private static $htmleditor_names = [];
+
+    /** @Config array facilitates registering shortcodable classes via yml config */
+    private static $shortcodable_classes = [];
+
+    public static function register_classes(array $classes)
     {
         if (is_array($classes) && count($classes)) {
             foreach ($classes as $class) {
@@ -29,30 +35,57 @@ class Shortcodable extends ViewableData
     public static function register_class($class)
     {
         if (class_exists($class)) {
-            if (!singleton($class)->hasMethod('parse_shortcode')) {
-                user_error("Failed to register \"$class\" with shortcodable. $class must have the method parse_shortcode(). See /shortcodable/README.md", E_USER_ERROR);
+            $shortcode = Config::inst()->get($class, 'shortcode') ?: ClassInfo::shortName($class);
+            $parseMethodName = Config::inst()->get($class, 'shortcode_callback') ?: 'parse_shortcode';
+
+            if (!singleton($class)->hasMethod($parseMethodName)) {
+                user_error("Failed to register \"$class\" with Shortcodable: missing/unconfigured shortcode parser method (looked for: $parseMethodName)", E_USER_ERROR);
             }
-            ShortcodeParser::get('default')->register($class, array($class, 'parse_shortcode'));
-            singleton(ShortcodableParser::class)->register($class);
+//            if (!$shortcode = Config::inst()->get($class, 'shortcode')) {
+//                user_error("Registering \"$class\" with short classname as shortcode: missing \$shortcode config value", E_USER_NOTICE);
+//            }
+
+            ShortcodeParser::get()->register($shortcode, [singleton($class), $parseMethodName]);
         }
     }
 
-    public static function get_shortcodable_classes()
-    {
-        return Config::inst()->get(Shortcodable::class, 'shortcodable_classes');
-    }
 
-    public static function get_shortcodable_classes_fordropdown()
+    /**
+     * Returns nested arrays with shortcodable tags & info:
+     [
+       ["sc_class_map"] => [
+         ["currentyear"] => "Restruct\Silverstripe\AdminTweaks\Shortcodes\CurrentYearShortcode",
+         ["featuredimage"] => "Restruct\Silverstripe\AdminTweaks\Shortcodes\FeaturedImageShortcode",
+         ... etc
+       ],
+       ["sc_label_map"] => [
+         ["currentyear"] => "Actueel jaartal",
+         ["featuredimage"] => "Pagina afbeelding van huidige pagina invoegen",
+         ... etc
+       ]
+     ]
+     *
+     * @return array
+     */
+    public static function shortcode_class_info()
     {
-        $classList = self::get_shortcodable_classes();
-        $classes = array();
+        $classes = [];
+
+        $classList = Config::inst()->get(Shortcodable::class, 'shortcodable_classes');
         if (is_array($classList)) {
             foreach ($classList as $class) {
-                if (singleton($class)->hasMethod('singular_name')) {
-                    $classes[$class] = singleton($class)->singular_name();
+                $classInst = singleton($class);
+                $classShortcode = Config::inst()->get($class, 'shortcode') ?: ClassInfo::shortName($class);
+                if($classInst->hasMethod('getShortcodeLabel')) {
+                    $classDescription = $classInst->getShortcodeLabel();
+                } elseif ($classInst->hasMethod('singular_name')) {
+                    $classDescription = $classInst->singular_name();
                 } else {
-                    $classes[$class] = $class;
+                    $classDescription = ClassInfo::shortName($class);
                 }
+
+                $classes['sc_class_map'][$classShortcode] = $class;
+                $classes['sc_label_map'][$classShortcode] = $classDescription;
             }
         }
         return $classes;
@@ -60,12 +93,15 @@ class Shortcodable extends ViewableData
 
     public static function get_shortcodable_classes_with_placeholders()
     {
-        $classes = array();
-        foreach (self::get_shortcodable_classes() as $class) {
+        $shortcodableInfo = static::shortcode_class_info();
+
+        $placeholderClasses = [];
+        foreach ($shortcodableInfo['sc_class_map'] as $shortcode => $class) {
             if (singleton($class)->hasMethod('getShortcodePlaceHolder')) {
-                $classes[] = $class;
+                $placeholderClasses[$shortcode] = $class;
             }
         }
-        return $classes;
+
+        return $placeholderClasses;
     }
 }

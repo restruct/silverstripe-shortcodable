@@ -1,11 +1,11 @@
 <?php
 
-namespace Silverstripe\Shortcodable;
+namespace Shortcodable\Controllers\Extensions;
 
-use SilverStripe\Core\Extension;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Extension;
 
-class ShortcodableShortcodeParserExtension extends Extension
+class ShortcodeParserExtension extends Extension
 {
     public function onBeforeParse(&$content)
     {

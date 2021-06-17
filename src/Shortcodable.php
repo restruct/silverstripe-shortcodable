@@ -69,7 +69,10 @@ class Shortcodable
      */
     public static function shortcode_class_info()
     {
-        $classes = [];
+        $classes = [
+            'sc_class_map' => [],
+            'sc_label_map' => [],
+        ];
 
         $classList = Config::inst()->get(Shortcodable::class, 'shortcodable_classes');
         if (is_array($classList)) {
@@ -88,6 +91,7 @@ class Shortcodable
                 $classes['sc_label_map'][$classShortcode] = $classDescription;
             }
         }
+
         return $classes;
     }
 

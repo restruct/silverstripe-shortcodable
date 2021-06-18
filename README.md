@@ -4,7 +4,8 @@ Adds a ![](docs/screens/button.png) button to HTMLEditorField for CMS users to i
 Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 
 ![](docs/screens/dialog.png)
-This module is a SS4 partial to largely rewrite of sheadawson/silverstripe-shortcodable.
+This module is a partial-to-largely rewrite of sheadawson/silverstripe-shortcodable.<br>
+It depends on [Silverstripe Simpler]() for some non-react UI functionalities (mainly the modal dialog).
 
 ## Configuration
 Register DataObjects or classes as shortcodable via Yaml config:
@@ -54,17 +55,19 @@ To display a nice image instead of the raw shortcode in the CMS editor, implemen
 
 ```php
 /**
- * Redirect to an image or return image data directly to be displayed as shortcode placeholder in the editor
- *
- * @param array $attributes the list of attributes of the shortcode
- * @return \SilverStripe\Control\HTTPResponse
- **/
+* Redirect to an image OR return image data directly to be displayed as shortcode placeholder in the editor
+* (getShortcodePlaceHolder gets loaded as/from the 'src' attribute of an <img> tag)
+*
+* @param array $attributes attribute key-value pairs of the shortcode
+* @return \SilverStripe\Control\HTTPResponse
+**/
 public function getShortcodePlaceHolder($attributes)
 {
-    // Flavour one: redirect to image URL
-    Controller::curr()->redirect('https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_92x30dp.png');
+    // Flavour one: redirect to image URL (for this example we're also including the attributes array in the URL)
+    Controller::curr()->redirect('https://www.silverstripe.org/apple-touch-icon-76x76.png?attrs='.json_encode($attributes));
 
-    // Flavour two: output image/svg data directly
+    // Flavour two: output image/svg data directly (any bitmap but may also be SVG)
+    // Hint: you may process attribute values eg to show a set of image thumbnails wrapped in an SVG as placeholder for a slideshow
     $response = Controller::curr()->getResponse();
     $response->addHeader('Content-Type','image/svg+xml');
     $response->addHeader('Vary','Accept-Encoding');
@@ -85,7 +88,7 @@ public function getShortcodePlaceHolder($attributes)
 - [x] Inserting new & editing existing shortcode (+undo)
 - [x] Re-implement DataObjects as shortcodable (incl. getShortcodableRecords etc)
 - [x] Re-implement placeholders
-- [ ] Check/re-implement(?) [BOM fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/5) and in [ShortcodeController](https://github.com/sheadawson/silverstripe-shortcodable/blob/master/src/Controller/ShortcodableController.php#L240)
+- [x] Check/re-implement(?) [BOM fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/5) and in [ShortcodeController](https://github.com/sheadawson/silverstripe-shortcodable/blob/master/src/Controller/ShortcodableController.php#L240)
 - [ ] Check/re-implement(?) [P/DIV wrapper fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/51/files)
 - [ ] Check/implement(?) [wrapping shortcodes](https://github.com/sheadawson/silverstripe-shortcodable/pull/73)
 - [ ] ...

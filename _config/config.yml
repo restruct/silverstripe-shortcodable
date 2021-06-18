@@ -20,13 +20,6 @@ SilverStripe\Forms\HTMLEditor\HTMLEditorField:
   extensions:
     - Shortcodable\Extensions\HtmlEditorFieldExtension
 
-#Restruct\Silverstripe\AdminTweaks\Shortcodes\FeaturedImageShortcode:
-#  extensions:
-#    - Shortcodable\Extensions\ShortcodableTestExtension
-#SilverStripe\Admin\LeftAndMain:
-#  extensions:
-#    - Silverstripe\Shortcodable\Extensions\LeftAndMainExtension
-#
-#Silverstripe\Shortcodable\ShortcodeParser:
-#  extensions:
-#    - Silverstripe\Shortcodable\ShortcodableShortcodeParserExtension
+SilverStripe\View\Parsers\ShortcodeParser:
+  extensions:
+    - Shortcodable\Extensions\ShortcodeParserExtension

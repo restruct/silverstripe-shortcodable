@@ -49,6 +49,15 @@ Implement these methods on your shortcodable classes (may also be added via an E
 - `getShortcodableRecords()` (optional, if applied to DataObject)
 - `getShortcodePlaceholder($attributes)` (optional)
 
+**Wrapping (optional):**
+In this module, `$shortcodable_is_block` and `$disable_wrapper` have been replaced with `$shortcode_close_parent`.<br>
+- ~~`private static $shortcodable_is_block` (optional, if true shortcode output will be wrapped in <div> instead of default <p>)~~
+- ~~`private static $disable_wrapper` (optional, if true shortcode output will not be wrapped at all (overrules $shortcodable_is_block))~~
+- `private static $shortcode_is_block` (optional, set to true if your shortcode output is a block-type html element)
+
+If you set `$shortcode_close_parent` to true, the parent node will be closed before your shortcode output and reopened after. <br>
+Eg `<p>Some [shortcode] content</p>` would become `<p>Some </p>[shortcode]<p> content</p>`;
+
 
 ## Shortcode placeholder images
 To display a nice image instead of the raw shortcode in the CMS editor, implement a getShortcodePlaceHolder method on your shortcodable object:
@@ -89,9 +98,9 @@ public function getShortcodePlaceHolder($attributes)
 - [x] Re-implement DataObjects as shortcodable (incl. getShortcodableRecords etc)
 - [x] Re-implement placeholders
 - [x] Check/re-implement(?) [BOM fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/5) and in [ShortcodeController](https://github.com/sheadawson/silverstripe-shortcodable/blob/master/src/Controller/ShortcodableController.php#L240)
-- [ ] Check/re-implement(?) [P/DIV wrapper fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/51/files)
+- [x] Check/re-implement(?) [P/DIV wrapper fix](https://github.com/sheadawson/silverstripe-shortcodable/pull/51/files)
+- [ ] Check/restore functionality for Uploadfields to load existing value
 - [ ] Check/implement(?) [wrapping shortcodes](https://github.com/sheadawson/silverstripe-shortcodable/pull/73)
-- [ ] ...
 
 
 ## Refs:

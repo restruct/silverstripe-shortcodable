@@ -34,6 +34,7 @@
       simpler.modal.saveBtn = false;
       simpler.modal.saveTxt = 'Insert shortcode';
       simpler.modal.bodyHtml = simpler.spinner;
+      console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData());
       $.post(shortcodable.controller_url, shortcodable.getCurrentEditorSelectionAsParsedShortcodeData(), function (data) {
         // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
         simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
@@ -71,15 +72,22 @@
     getCurrentEditorSelectionAsParsedShortcodeData: function getCurrentEditorSelectionAsParsedShortcodeData() {
       if (tinyMCE.activeEditor.selection.isCollapsed()) {
         return;
-      }
+      } // We get 'regular' content (may also be html), as when explicitly requesting 'text' format,
+      // placeholder images will be excluded (simply an empty string '' was returned instead)
+      // var selectedTxt = tinymce.activeEditor.selection.getContent({format: 'text'}).trim();
 
-      var selectedTxt = tinymce.activeEditor.selection.getContent({
-        format: 'text'
-      }).trim();
+
+      var selectedTxt = tinymce.activeEditor.selection.getContent().trim();
+      console.log('78: ' + selectedTxt); // Convert a selection containing placeholder image (if any) to 'plain' shortcode
+
+      selectedTxt = shortcodable.placeholdersToShortcodes(selectedTxt, tinyMCE.activeEditor);
+      console.log('81: ' + selectedTxt); // Check if we're dealing with a shortcode in the first place
 
       if (selectedTxt.length <= 2 || selectedTxt.charAt(0) !== '[' || selectedTxt.slice(-1) !== ']') {
+        console.log('85: returning');
         return;
-      }
+      } // Now 'parse' the shortcode attributes by creating it in jQuery as if it's an HTML node;
+
 
       var shortcodeData = {
         'ShortcodeType': selectedTxt.slice(1, -1).split(' ').shift()
@@ -87,9 +95,10 @@
       $.each($("<".concat(selectedTxt.slice(1, -1), " />")).get(0).attributes, function (index, attr) {
         shortcodeData[attr.name] = attr.value;
       });
+      console.log('94: ', shortcodeData);
       return shortcodeData;
     },
-    // get an attribute from a shortcode string by its key, eg 'id' from '[myshortcode id="1" other="etc"]
+    // get a specific attribute value from a shortcode string by its key, eg 'id' from '[myshortcode id="1" other="etc"]
     parseAttributeValue: function parseAttributeValue(string, key) {
       var attr = new RegExp(key + '=\"([^\"]+)\"', 'g').exec(string); // via tinymce.DOM.decode to decode any HTML entities, such as &aring;
 
@@ -118,20 +127,12 @@
     // Substitutes placeholder images with their shortcode equivalents
     placeholdersToShortcodes: function placeholdersToShortcodes(source, editor) {
       // find & replace .sc-placeholder images in the html
-      var content = jQuery(source);
-      content.find('.sc-placeholder').each(function () {
+      var wrappedContent = jQuery('<div>' + source + '</div>');
+      wrappedContent.find('.sc-placeholder').each(function () {
         var el = jQuery(this);
-        var shortCode = '[' + tinymce.trim(el.attr('title')) + ']';
-        el.replaceWith(shortCode);
-      }); // What's happening here? Sort of wrapping/cleaning stuff or so?
-
-      var originalContent = '';
-      content.each(function () {
-        if (this.outerHTML !== undefined) {
-          originalContent += this.outerHTML;
-        }
+        el.replaceWith('[' + tinymce.trim(el.attr('title')) + ']');
       });
-      return originalContent;
+      return wrappedContent.html();
     }
   };
 })(jQuery);

@@ -49,7 +49,6 @@ class Shortcodable
         }
     }
 
-
     /**
      * Returns nested arrays with shortcodable tags & info:
      [
@@ -107,5 +106,12 @@ class Shortcodable
         }
 
         return $placeholderClasses;
+    }
+
+    public static function get_shortcodable_sc_class_map()
+    {
+        $shortcodableInfo = static::shortcode_class_info();
+
+        return $shortcodableInfo['sc_class_map'];
     }
 }

@@ -10,6 +10,7 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\View\Parsers\ShortcodeParser;
 
 class ShortcodableAdminController
     extends Controller
@@ -145,13 +146,13 @@ class ShortcodableAdminController
         if ($object->hasMethod('getShortcodePlaceHolder')) {
             $attributes = null;
 
-//            if ($shortcode = $request->requestVar('sc')) {
-//                $shortcode = str_replace("\xEF\xBB\xBF", '', $shortcode); //remove BOM inside string on cursor position...
-//                $shortcodeData = singleton('\Silverstripe\Shortcodable\ShortcodableParser')->the_shortcodes([], $shortcode);
-//                if (isset($shortcodeData[0])) {
-//                    $attributes = $shortcodeData[0]['atts'];
-//                }
-//            }
+            if ($shortcode = $request->requestVar('sc')) {
+                $shortcode = str_replace("\xEF\xBB\xBF", '', $shortcode); //remove BOM inside string on cursor position...
+                $shortcodeData = ShortcodeParser::get_active()->extractTags($shortcode);
+                if (isset($shortcodeData[0])) {
+                    $attributes = $shortcodeData[0]['attrs'];
+                }
+            }
 
             return $object->getShortcodePlaceholder($attributes);
         }

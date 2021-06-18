@@ -67,7 +67,7 @@ public function getShortcodePlaceHolder($attributes)
     Controller::curr()->redirect('https://www.silverstripe.org/apple-touch-icon-76x76.png?attrs='.json_encode($attributes));
 
     // Flavour two: output image/svg data directly (any bitmap but may also be SVG)
-    // Hint: you may process attribute values eg to show a set of image thumbnails wrapped in an SVG as placeholder for a slideshow
+    // Hint: process attributes eg to show a set of image thumbnails wrapped in an SVG as gallery-placeholder
     $response = Controller::curr()->getResponse();
     $response->addHeader('Content-Type','image/svg+xml');
     $response->addHeader('Vary','Accept-Encoding');

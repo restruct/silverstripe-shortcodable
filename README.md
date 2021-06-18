@@ -5,7 +5,7 @@ Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 
 ![](docs/screens/dialog.png)
 This module is a partial-to-largely rewrite of sheadawson/silverstripe-shortcodable.<br>
-It depends on [Silverstripe Simpler]() for some non-react UI functionalities (mainly the modal dialog).
+It depends on [Silverstripe Simpler](https://github.com/restruct/silverstripe-simpler) for some non-react UI functionalities (mainly the modal dialog).
 
 ## Configuration
 Register DataObjects or classes as shortcodable via Yaml config:

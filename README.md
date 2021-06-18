@@ -50,9 +50,7 @@ Implement these methods on your shortcodable classes (may also be added via an E
 - `getShortcodePlaceholder($attributes)` (optional)
 
 **Wrapping (optional):**
-In this module, `$shortcodable_is_block` and `$disable_wrapper` have been replaced with `$shortcode_close_parent`.<br>
-- ~~`private static $shortcodable_is_block` (optional, if true shortcode output will be wrapped in <div> instead of default <p>)~~
-- ~~`private static $disable_wrapper` (optional, if true shortcode output will not be wrapped at all (overrules $shortcodable_is_block))~~
+In this module, `$shortcodable_is_block` and `$disable_wrapper` have been replaced with `$shortcode_close_parent`:<br>
 - `private static $shortcode_is_block` (optional, set to true if your shortcode output is a block-type html element)
 
 If you set `$shortcode_close_parent` to true, the parent node will be closed before your shortcode output and reopened after. <br>

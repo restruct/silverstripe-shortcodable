@@ -15,7 +15,7 @@ class ShortcodeParserExtension
     {
         /** @var ShortcodeParser $parser */
         $parser = $this->owner;
-        $sc_nonP_wrapper_map = [];
+        $sc_block_wrapped_map = [];
         foreach(Shortcodable::get_shortcodable_sc_class_map() as $sc_tag => $sc_class){
             if (Config::inst()->get($sc_class, 'shortcode_close_parent')) {
                 $sc_block_wrapped_map[] = $sc_tag;

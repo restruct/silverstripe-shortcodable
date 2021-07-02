@@ -132,7 +132,6 @@ class ShortcodableAdminController
         $object_id = $request->param('ObjectID');
         $sc_class_map = Shortcodable::get_shortcodable_classes_with_placeholders();
         $sc_class = array_key_exists($sc_key, $sc_class_map) ? $sc_class_map[$sc_key] : null;
-
         if (!$sc_class || !class_exists($sc_class)) {
             return;
         }

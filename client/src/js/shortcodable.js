@@ -111,11 +111,13 @@
                    if (placeholder_shortcodes.indexOf(name) !== -1) {
                        var id = shortcodable.parseAttributeValue(params, 'id');
                        var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
-                       var img = jQuery('<img/>')
+                       var el = jQuery('<img/>')
+                           .attr('type', 'image/svg+xml')
                            .attr('class', 'sc-placeholder mceItem mceNonEditable')
                            .attr('title', name + ' ' + params)
                            .attr('src', src);
-                       return img.prop('outerHTML');
+                       console.log(el.prop('outerHTML'));
+                       return el.prop('outerHTML');
                    }
                    return found;
                 });

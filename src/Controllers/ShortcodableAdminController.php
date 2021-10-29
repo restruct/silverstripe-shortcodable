@@ -175,7 +175,7 @@ class ShortcodableAdminController
 
         // default: return an URL to a SVG shortcode placeholder image
         $defaults = self::config()->get('default_placeholder');
-        $width = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_width'] : ((int) $defaults['fontsize']) / 2 * strlen($request->requestVar('sc'));
+        $width = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_width'] : 60 + floor( ((int) $defaults['fontsize']) / 1.8 * strlen($request->requestVar('sc')) );
         $height = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_height'] : $defaults['height'];
         // allow overriding by a config on the SC object class
         $sc_defaults = Config::inst()->get($sc_class, 'placeholder_settings');

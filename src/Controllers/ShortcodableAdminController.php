@@ -4,6 +4,7 @@ namespace Shortcodable\Controllers;
 
 use Shortcodable\Shortcodable;
 use SilverStripe\Control\Controller;
+use SilverStripe\Core\Config\Config;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
@@ -15,7 +16,21 @@ use SilverStripe\View\Parsers\ShortcodeParser;
 class ShortcodableAdminController
     extends Controller
 {
-    private static $url_segment = 'shortcodable';
+    private static $url_segment = 'admin/shortcodable';
+
+    /** @Config default shortcode placeholder svg-image config values */
+    private static $default_placeholder = [
+        'height' => 46,
+        'full_height' => 460,
+        'width' => 240,
+        'full_width' => 1000,
+//        'font' => 'Arial',
+        'font' => 'Consolas, "Lucida Console", "DejaVu Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace',
+        'fontsize' => 16,
+        'fg' => 'ffffff',
+        'bg' => '338dc1', // dark blue as used in the CMS
+//        'bg' => '66727d', // dark gray as used in the CMS
+    ];
 
     /**
      * @var array
@@ -23,7 +38,8 @@ class ShortcodableAdminController
     private static $allowed_actions = [
         'index' => 'CMS_ACCESS_LeftAndMain',
 //        'handleEdit' => 'CMS_ACCESS_LeftAndMain',
-        'shortcodePlaceHolder' => 'CMS_ACCESS_LeftAndMain'
+        'shortcodePlaceHolder' => 'CMS_ACCESS_LeftAndMain',
+        'shortcodePlaceholderImage' => 'CMS_ACCESS_LeftAndMain',
     ];
 
     /**
@@ -31,7 +47,8 @@ class ShortcodableAdminController
      */
     private static $url_handlers = [
 //        'edit/$ShortcodeType!/$Action//$ID/$OtherID' => 'handleEdit'
-        'placeholder/$Shortcode!/$ObjectID/$OtherProp' => 'shortcodePlaceHolder'
+        'placeholder/$Shortcode!/$ObjectID/$OtherProp' => 'shortcodePlaceHolder',
+        'placehold.img' => 'shortcodePlaceholderImage',
     ];
 
     /**
@@ -155,5 +172,55 @@ class ShortcodableAdminController
 
             return $object->getShortcodePlaceholder($attributes);
         }
+
+        // default: return an URL to a SVG shortcode placeholder image
+        $defaults = self::config()->get('default_placeholder');
+        $width = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_width'] : ((int) $defaults['fontsize']) / 2 * strlen($request->requestVar('sc'));
+        $height = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_height'] : $defaults['height'];
+        // allow overriding by a config on the SC object class
+        $sc_defaults = Config::inst()->get($sc_class, 'placeholder_settings');
+        if(isset($sc_defaults['width'])) $width = $sc_defaults['width'];
+        if(isset($sc_defaults['height'])) $height = $sc_defaults['height'];
+
+        return $this->redirect($this->Link("placehold.img") . '?' . http_build_query([ 'w' => $width, 'h' => $height, 'txt' => $request->requestVar('sc') ]));
     }
+
+    /**
+     * Generate an SVG placeholder image (instead of using placehold.it or placeholdit.imgix.net (which seems discontinued)
+     * adapted from https://gist.github.com/james2doyle/3aad1d22163c3c3e5cfd
+     * Usage: <img src="shortcodable/placehold.img?w=400&h=400&bg=bada55&fg=000000&ff=Georgia&fs=20&txt=placeholdertext" />
+     *
+     * @param $request
+     * @return void
+     */
+    public function shortcodePlaceholderImage()
+    {
+        $req = $this->getRequest();
+        $defaults = self::config()->get('default_placeholder');
+
+        $w = $req->getVar('w') ?: $defaults['width'];
+        $h = $req->getVar('h') ?: $defaults['height'];
+        $render_w = ($w=='100%' ? $defaults['full_width'] : min($w, $defaults['full_width']));
+        $render_h = ($h=='100%' ? $defaults['full_height'] : min($h, $defaults['full_height']));
+
+        $txtsize = (int) $req->getVar('txtsize') ?: $defaults['fontsize'];
+        $bg = $req->getVar('bg') ?: $defaults['bg'];
+        $txtclr = $req->getVar('fg') ?: $defaults['fg'];
+        $font = str_replace('"', '\'', $req->getVar('ff') ?: $defaults['font'] );
+        $txt = $req->getVar('txt') ? htmlentities($req->getVar('txt')): "$w x $h";
+
+        $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"$render_h\" width=\"$render_w\" viewBox=\"0 0 $render_w $render_h\">
+            <g>
+                <title>placeholder</title>
+                <rect id=\"svg_1\" height=\"$render_h\" width=\"$render_w\" y=\"0\" x=\"0\" fill=\"#$bg\"/>
+                <text x=\"50%\" y=\"50%\" text-anchor=\"middle\" alignment-baseline=\"middle\" font-size=\"$txtsize\" dominant-baseline=\"middle\" font-family=\"$font\" fill=\"#$txtclr\">$txt</text>
+            </g>
+        </svg>";
+
+        $this->getResponse()
+            ->addHeader('Content-Type', 'image/svg+xml')
+            ->setBody($svg)
+            ->output();
+    }
+
 }

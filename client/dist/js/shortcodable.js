@@ -1,1 +1,295 @@
-(()=>{var e,o={305:()=>{var e;e=jQuery,shortcodable={controller_url:"admin/shortcodable",init:function(){e("body").on("change","select.shortcode-type",(function(){e.post(shortcodable.controller_url,e(this).parents("form").serializeArray(),(function(o){simpler.modal.bodyHtml=e("#xhr_buffer").html(o).html()}))})),e("body").on("submit","#Form_ShortcodeForm",(function(e){return e.preventDefault(),shortcodable.insertShortcode(),simpler.modal.show=!1,!1}))},openDialog:function(){simpler.modal.show=!0,simpler.modal.title="Insert/edit shortcode",simpler.modal.closeBtn=!1,simpler.modal.closeTxt="Close",simpler.modal.saveBtn=!1,simpler.modal.saveTxt="Insert shortcode",simpler.modal.bodyHtml=simpler.spinner,console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData()),e.post(shortcodable.controller_url,shortcodable.getCurrentEditorSelectionAsParsedShortcodeData(),(function(o){simpler.modal.bodyHtml=e("#xhr_buffer").html(o).html()}))},insertShortcode:function(){var o=e("#Form_ShortcodeForm").serializeArray(),t=["..."];e.each(o,(function(e,o){"SecurityID"!==o.name&&("ShortcodeType"===o.name?t[0]=o.value:t.push("".concat(o.name,'="').concat(o.value,'"')))}));var r="[".concat(t.join(" "),"]");r.length&&(tinyMCE.activeEditor.selection.setContent(r),tinyMCE.activeEditor.undoManager.add())},getCurrentEditorSelectionAsParsedShortcodeData:function(){if(!tinyMCE.activeEditor.selection.isCollapsed()){var o=tinymce.activeEditor.selection.getContent().trim();if(console.log("78: "+o),o=shortcodable.placeholdersToShortcodes(o,tinyMCE.activeEditor),console.log("81: "+o),!(o.length<=2||"["!==o.charAt(0)||"]"!==o.slice(-1))){var t={ShortcodeType:o.slice(1,-1).split(" ").shift()};return e.each(e("<".concat(o.slice(1,-1)," />")).get(0).attributes,(function(e,o){t[o.name]=o.value})),console.log("94: ",t),t}console.log("85: returning")}},parseAttributeValue:function(e,o){var t=new RegExp(o+'="([^"]+)"',"g").exec(e);return t?tinymce.DOM.decode(t[1]):""},shortcodesToPlaceholders:function(o,t){var r=e(t.targetElm).data("shortcodableplaceholdercodes");return r?o.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi,(function(e,o,t){if(-1!==r.indexOf(o)){var l=shortcodable.parseAttributeValue(t,"id"),n=encodeURI(shortcodable.controller_url+"/placeholder/"+o+"/"+l+"?sc=["+o+" "+t+"]"),a=jQuery("<img/>").attr("type","image/svg+xml").attr("class","sc-placeholder mceItem mceNonEditable").attr("title",o+" "+t).attr("src",n);return console.log(a.prop("outerHTML")),a.prop("outerHTML")}return e})):o},placeholdersToShortcodes:function(e,o){var t=jQuery("<div>"+e+"</div>");return t.find(".sc-placeholder").each((function(){var e=jQuery(this);e.replaceWith("["+tinymce.trim(e.attr("title"))+"]")})),t.html()}}},355:()=>{}},t={};function r(e){var l=t[e];if(void 0!==l)return l.exports;var n=t[e]={exports:{}};return o[e](n,n.exports,r),n.exports}r.m=o,e=[],r.O=(o,t,l,n)=>{if(!t){var a=1/0;for(s=0;s<e.length;s++){for(var[t,l,n]=e[s],c=!0,i=0;i<t.length;i++)(!1&n||a>=n)&&Object.keys(r.O).every((e=>r.O[e](t[i])))?t.splice(i--,1):(c=!1,n<a&&(a=n));c&&(e.splice(s--,1),o=l())}return o}n=n||0;for(var s=e.length;s>0&&e[s-1][2]>n;s--)e[s]=e[s-1];e[s]=[t,l,n]},r.o=(e,o)=>Object.prototype.hasOwnProperty.call(e,o),(()=>{var e={995:0,454:0};r.O.j=o=>0===e[o];var o=(o,t)=>{var l,n,[a,c,i]=t,s=0;for(l in c)r.o(c,l)&&(r.m[l]=c[l]);if(i)var d=i(r);for(o&&o(t);s<a.length;s++)n=a[s],r.o(e,n)&&e[n]&&e[n][0](),e[a[s]]=0;return r.O(d)},t=self.webpackChunkbase_package_json=self.webpackChunkbase_package_json||[];t.forEach(o.bind(null,0)),t.push=o.bind(null,t.push.bind(t))})(),r.O(void 0,[454],(()=>r(305)));var l=r.O(void 0,[454],(()=>r(355)));l=r.O(l)})();
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./client/src/js/shortcodable.js":
+/*!***************************************!*\
+  !*** ./client/src/js/shortcodable.js ***!
+  \***************************************/
+/***/ (() => {
+
+(function ($) {
+  shortcodable = {
+    controller_url: 'admin/shortcodable',
+    init: function init() {
+      // handle change on shortcode-type field
+      $('body').on('change', 'select.shortcode-type', function () {
+        $.post(shortcodable.controller_url, $(this).parents('form').serializeArray(), function (data) {
+          // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
+          simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
+        });
+      }); // shortcode form submit button handler
+
+      $('body').on('submit', '#Form_ShortcodeForm', function (event) {
+        event.preventDefault();
+        shortcodable.insertShortcode();
+        simpler.modal.show = false;
+        return false;
+      });
+    },
+    openDialog: function openDialog() {
+      simpler.modal.show = true;
+      simpler.modal.title = 'Insert/edit shortcode';
+      simpler.modal.closeBtn = false;
+      simpler.modal.closeTxt = 'Close';
+      simpler.modal.saveBtn = false;
+      simpler.modal.saveTxt = 'Insert shortcode';
+      simpler.modal.bodyHtml = simpler.spinner;
+      console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData());
+      $.post(shortcodable.controller_url, shortcodable.getCurrentEditorSelectionAsParsedShortcodeData(), function (data) {
+        // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
+        simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
+      });
+    },
+    // insert shortcode into editor
+    insertShortcode: function insertShortcode() {
+      var shortcodeData = $('#Form_ShortcodeForm').serializeArray(); // [ {name: "ShortcodeType", value: "featuredimage"} {name: "title", value: "test"} {name: "SecurityID", value: "..."} ]
+
+      var shortcodeParts = ['...']; // @[0] to be replaced with actual shortcode
+
+      $.each(shortcodeData, function (index, data) {
+        if (data.name === "SecurityID") return;
+
+        if (data.name === "ShortcodeType") {
+          shortcodeParts[0] = data.value;
+        } else {
+          shortcodeParts.push("".concat(data.name, "=\"").concat(data.value, "\""));
+        }
+      });
+      var shortcode = "[".concat(shortcodeParts.join(' '), "]");
+
+      if (shortcode.length) {
+        tinyMCE.activeEditor.selection.setContent(shortcode);
+        tinyMCE.activeEditor.undoManager.add(); // make snapshot so setContent is undo-able
+        //                this.modifySelection(function(ed){
+        //                    var shortcodable = tinyMCE.activeEditor.plugins.shortcodable;
+        //                    ed.replaceContent(shortcode);
+        //                    var newContent = shortcodable.replaceShortcodesWithPlaceholders(ed.getContent(), ed.getInstance());
+        //                    ed.setContent(newContent);
+        //                });
+      }
+    },
+    // @TODO try & 'grow' selection to shortcode and parse
+    getCurrentEditorSelectionAsParsedShortcodeData: function getCurrentEditorSelectionAsParsedShortcodeData() {
+      if (tinyMCE.activeEditor.selection.isCollapsed()) {
+        return;
+      } // We get 'regular' content (may also be html), as when explicitly requesting 'text' format,
+      // placeholder images will be excluded (simply an empty string '' was returned instead)
+      // var selectedTxt = tinymce.activeEditor.selection.getContent({format: 'text'}).trim();
+
+
+      var selectedTxt = tinymce.activeEditor.selection.getContent().trim();
+      console.log('78: ' + selectedTxt); // Convert a selection containing placeholder image (if any) to 'plain' shortcode
+
+      selectedTxt = shortcodable.placeholdersToShortcodes(selectedTxt, tinyMCE.activeEditor);
+      console.log('81: ' + selectedTxt); // Check if we're dealing with a shortcode in the first place
+
+      if (selectedTxt.length <= 2 || selectedTxt.charAt(0) !== '[' || selectedTxt.slice(-1) !== ']') {
+        console.log('85: returning');
+        return;
+      } // Now 'parse' the shortcode attributes by creating it in jQuery as if it's an HTML node;
+
+
+      var shortcodeData = {
+        'ShortcodeType': selectedTxt.slice(1, -1).split(' ').shift()
+      };
+      $.each($("<".concat(selectedTxt.slice(1, -1), " />")).get(0).attributes, function (index, attr) {
+        shortcodeData[attr.name] = attr.value;
+      });
+      console.log('94: ', shortcodeData);
+      return shortcodeData;
+    },
+    // get a specific attribute value from a shortcode string by its key, eg 'id' from '[myshortcode id="1" other="etc"]
+    parseAttributeValue: function parseAttributeValue(string, key) {
+      var attr = new RegExp(key + '=\"([^\"]+)\"', 'g').exec(string); // via tinymce.DOM.decode to decode any HTML entities, such as &aring;
+
+      return attr ? tinymce.DOM.decode(attr[1]) : '';
+    },
+    // Substitute shortcodes with placeholder images
+    shortcodesToPlaceholders: function shortcodesToPlaceholders(source, editor) {
+      var placeholder_shortcodes = $(editor.targetElm).data('shortcodableplaceholdercodes');
+
+      if (placeholder_shortcodes) {
+        return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
+          if (placeholder_shortcodes.indexOf(name) !== -1) {
+            var id = shortcodable.parseAttributeValue(params, 'id');
+            var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
+            var el = jQuery('<img/>').attr('type', 'image/svg+xml').attr('class', 'sc-placeholder mceItem mceNonEditable').attr('title', name + ' ' + params).attr('src', src);
+            console.log(el.prop('outerHTML'));
+            return el.prop('outerHTML');
+          }
+
+          return found;
+        });
+      } // else/default:
+
+
+      return source;
+    },
+    // Substitutes placeholder images with their shortcode equivalents
+    placeholdersToShortcodes: function placeholdersToShortcodes(source, editor) {
+      // find & replace .sc-placeholder images in the html
+      var wrappedContent = jQuery('<div>' + source + '</div>');
+      wrappedContent.find('.sc-placeholder').each(function () {
+        var el = jQuery(this);
+        el.replaceWith('[' + tinymce.trim(el.attr('title')) + ']');
+      });
+      return wrappedContent.html();
+    }
+  };
+})(jQuery);
+
+/***/ }),
+
+/***/ "./client/src/styles/shortcodable.scss":
+/*!*********************************************!*\
+  !*** ./client/src/styles/shortcodable.scss ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = __webpack_modules__;
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/chunk loaded */
+/******/ 	(() => {
+/******/ 		var deferred = [];
+/******/ 		__webpack_require__.O = (result, chunkIds, fn, priority) => {
+/******/ 			if(chunkIds) {
+/******/ 				priority = priority || 0;
+/******/ 				for(var i = deferred.length; i > 0 && deferred[i - 1][2] > priority; i--) deferred[i] = deferred[i - 1];
+/******/ 				deferred[i] = [chunkIds, fn, priority];
+/******/ 				return;
+/******/ 			}
+/******/ 			var notFulfilled = Infinity;
+/******/ 			for (var i = 0; i < deferred.length; i++) {
+/******/ 				var [chunkIds, fn, priority] = deferred[i];
+/******/ 				var fulfilled = true;
+/******/ 				for (var j = 0; j < chunkIds.length; j++) {
+/******/ 					if ((priority & 1 === 0 || notFulfilled >= priority) && Object.keys(__webpack_require__.O).every((key) => (__webpack_require__.O[key](chunkIds[j])))) {
+/******/ 						chunkIds.splice(j--, 1);
+/******/ 					} else {
+/******/ 						fulfilled = false;
+/******/ 						if(priority < notFulfilled) notFulfilled = priority;
+/******/ 					}
+/******/ 				}
+/******/ 				if(fulfilled) {
+/******/ 					deferred.splice(i--, 1)
+/******/ 					result = fn();
+/******/ 				}
+/******/ 			}
+/******/ 			return result;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/jsonp chunk loading */
+/******/ 	(() => {
+/******/ 		// no baseURI
+/******/ 		
+/******/ 		// object to store loaded and loading chunks
+/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
+/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
+/******/ 		var installedChunks = {
+/******/ 			"/js/shortcodable": 0,
+/******/ 			"styles/shortcodable": 0
+/******/ 		};
+/******/ 		
+/******/ 		// no chunk on demand loading
+/******/ 		
+/******/ 		// no prefetching
+/******/ 		
+/******/ 		// no preloaded
+/******/ 		
+/******/ 		// no HMR
+/******/ 		
+/******/ 		// no HMR manifest
+/******/ 		
+/******/ 		__webpack_require__.O.j = (chunkId) => (installedChunks[chunkId] === 0);
+/******/ 		
+/******/ 		// install a JSONP callback for chunk loading
+/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
+/******/ 			var [chunkIds, moreModules, runtime] = data;
+/******/ 			// add "moreModules" to the modules object,
+/******/ 			// then flag all "chunkIds" as loaded and fire callback
+/******/ 			var moduleId, chunkId, i = 0;
+/******/ 			for(moduleId in moreModules) {
+/******/ 				if(__webpack_require__.o(moreModules, moduleId)) {
+/******/ 					__webpack_require__.m[moduleId] = moreModules[moduleId];
+/******/ 				}
+/******/ 			}
+/******/ 			if(runtime) var result = runtime(__webpack_require__);
+/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
+/******/ 			for(;i < chunkIds.length; i++) {
+/******/ 				chunkId = chunkIds[i];
+/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
+/******/ 					installedChunks[chunkId][0]();
+/******/ 				}
+/******/ 				installedChunks[chunkIds[i]] = 0;
+/******/ 			}
+/******/ 			return __webpack_require__.O(result);
+/******/ 		}
+/******/ 		
+/******/ 		var chunkLoadingGlobal = self["webpackChunkbase_package_json"] = self["webpackChunkbase_package_json"] || [];
+/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
+/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
+/******/ 	__webpack_require__.O(undefined, ["styles/shortcodable"], () => (__webpack_require__("./client/src/js/shortcodable.js")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["styles/shortcodable"], () => (__webpack_require__("./client/src/styles/shortcodable.scss")))
+/******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
+/******/ 	
+/******/ })()
+;

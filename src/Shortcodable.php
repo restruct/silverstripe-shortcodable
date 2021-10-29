@@ -100,9 +100,10 @@ class Shortcodable
 
         $placeholderClasses = [];
         foreach ($shortcodableInfo['sc_class_map'] as $shortcode => $class) {
-            if (singleton($class)->hasMethod('getShortcodePlaceHolder')) {
+            // Since we can now fallback to the default SVG placeholder, return all
+//            if (singleton($class)->hasMethod('getShortcodePlaceHolder')) {
                 $placeholderClasses[$shortcode] = $class;
-            }
+//            }
         }
 
         return $placeholderClasses;

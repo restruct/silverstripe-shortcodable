@@ -108,7 +108,7 @@
             var placeholder_shortcodes = $(editor.targetElm).data('shortcodableplaceholdercodes');
             if (placeholder_shortcodes) {
                 return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
-                   if (placeholder_shortcodes.indexOf(name) !== -1) {
+                    if (placeholder_shortcodes.indexOf(name) !== -1) {
                        var id = shortcodable.parseAttributeValue(params, 'id');
                        var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
                        var el = jQuery('<img/>')
@@ -118,8 +118,8 @@
                            .attr('src', src);
                        console.log(el.prop('outerHTML'));
                        return el.prop('outerHTML');
-                   }
-                   return found;
+                    }
+                    return found;
                 });
             }
             // else/default:

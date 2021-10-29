@@ -25,3 +25,4 @@ SilverStripe\Forms\HTMLEditor\HTMLEditorField:
 SilverStripe\View\Parsers\ShortcodeParser:
   extensions:
     - Shortcodable\Extensions\ShortcodeParserExtension
+

@@ -12,7 +12,9 @@ var shortcodable_editorplugin = {
     init: function (editor) {
         // save some references
         this.editor = editor;
-        shortcodable.init();
+        if(!shortcodable.initialized) {
+            shortcodable.init();
+        }
     },
 
     // Plaintxt source [shortcodetags] -> WYSIWYG HTML: Substitute shortcodes with image placeholders

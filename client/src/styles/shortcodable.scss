@@ -58,6 +58,11 @@ $escaped-characters: (
 
 ///// MODAL/FORM
 #Form_ShortcodeForm {
+
+    #Form_ShortcodeForm_ShortcodeType_Holder {
+        margin-bottom: 1rem;
+    }
+
     //.form-group--no-label {
     //    border-bottom: 1px solid #dbe0e9;
     //    padding-bottom: 1rem;

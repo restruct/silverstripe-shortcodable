@@ -1,13 +1,22 @@
-(function($) {
+// import _ from 'underscore';
+
+// (function($) {
 
     shortcodable = {
 
         controller_url: 'admin/shortcodable',
 
+        initialized: false,
+
         init: function() {
+            // console.log('DEBUG: shortcodable – INIT');
+            this.initialized = true;
 
             // handle change on shortcode-type field
-            $('body').on('change', 'select.shortcode-type', function() {
+            // _.debounce(function, wait, true);
+            $('body').on('change', 'select.shortcode-type', function(event) {
+                // console.log('DEBUG: select.shortcode-type – CHANGE');
+                // console.log(event);
                 $.post(shortcodable.controller_url, $(this).parents('form').serializeArray(), function(data){
                     // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
                     simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
@@ -16,6 +25,8 @@
 
             // shortcode form submit button handler
             $('body').on('submit', '#Form_ShortcodeForm', function(event) {
+                // console.log('DEBUG: #Form_ShortcodeForm – SUBMIT');
+                // console.log(event);
                 event.preventDefault();
                 shortcodable.insertShortcode();
                 simpler.modal.show = false;
@@ -31,7 +42,7 @@
             simpler.modal.saveBtn = false;
             simpler.modal.saveTxt = 'Insert shortcode';
             simpler.modal.bodyHtml = simpler.spinner;
-            console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData());
+            // console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData());
             $.post(shortcodable.controller_url, shortcodable.getCurrentEditorSelectionAsParsedShortcodeData(), function(data){
                 // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
                 simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
@@ -75,14 +86,14 @@
             // placeholder images will be excluded (simply an empty string '' was returned instead)
             // var selectedTxt = tinymce.activeEditor.selection.getContent({format: 'text'}).trim();
             var selectedTxt = tinymce.activeEditor.selection.getContent().trim();
-            console.log('78: '+selectedTxt);
+            // console.log('78: '+selectedTxt);
             // Convert a selection containing placeholder image (if any) to 'plain' shortcode
             selectedTxt = shortcodable.placeholdersToShortcodes(selectedTxt, tinyMCE.activeEditor);
-            console.log('81: '+selectedTxt);
+            // console.log('81: '+selectedTxt);
 
             // Check if we're dealing with a shortcode in the first place
             if( selectedTxt.length<=2 || selectedTxt.charAt(0)!=='[' || selectedTxt.slice(-1)!==']') {
-                console.log('85: returning');
+                // console.log('85: returning');
                 return;
             }
 
@@ -91,7 +102,7 @@
             $.each($(`<${selectedTxt.slice(1,-1)} />`).get(0).attributes, function(index, attr){
                 shortcodeData[attr.name] = attr.value
             });
-            console.log('94: ', shortcodeData);
+            // console.log('94: ', shortcodeData);
 
             return shortcodeData;
         },
@@ -116,7 +127,7 @@
                            .attr('class', 'sc-placeholder mceItem mceNonEditable')
                            .attr('title', name + ' ' + params)
                            .attr('src', src);
-                       console.log(el.prop('outerHTML'));
+                       // console.log(el.prop('outerHTML'));
                        return el.prop('outerHTML');
                     }
                     return found;
@@ -139,4 +150,4 @@
 
     };
 
-})(jQuery);
+// })(jQuery);

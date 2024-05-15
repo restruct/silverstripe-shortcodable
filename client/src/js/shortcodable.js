@@ -1,6 +1,6 @@
 // import _ from 'underscore';
 
-// (function($) {
+(function($) {
 
     shortcodable = {
 
@@ -18,9 +18,11 @@
                 // console.log('DEBUG: select.shortcode-type – CHANGE');
                 // console.log(event);
                 $.post(shortcodable.controller_url, $(this).parents('form').serializeArray(), function(data){
-                    // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
-                    simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
-                });
+                        // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
+                        simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
+                    })
+                    .fail(function(response) { shortcodable.handleErrorResponse(response); })
+                ;
             });
 
             // shortcode form submit button handler
@@ -42,11 +44,24 @@
             simpler.modal.saveBtn = false;
             simpler.modal.saveTxt = 'Insert shortcode';
             simpler.modal.bodyHtml = simpler.spinner;
+
             // console.log(shortcodable.getCurrentEditorSelectionAsParsedShortcodeData());
             $.post(shortcodable.controller_url, shortcodable.getCurrentEditorSelectionAsParsedShortcodeData(), function(data){
-                // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
-                simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
-            });
+                    // (use the intermediary xhr_buffer element in order to have jQuery parse/activate listeners etc
+                    simpler.modal.bodyHtml = $('#xhr_buffer').html(data).html();
+                })
+                .fail(function(response) { shortcodable.handleErrorResponse(response); })
+            ;
+        },
+
+        // convenience method for handling error response from Shortcode controller (eg shortcode not implemented correctly)
+        handleErrorResponse: function(response) {
+            var errorFeedback = response.responseText
+                .split('<div class="header info error">').pop()
+                .split('<div class="info">').shift()
+                || response.responseText;
+            simpler.modal.bodyHtml = '<div class="alert alert-danger"><strong>ERROR loading shortcode </strong>(‘'
+                + response.statusText + '’):</div>' + errorFeedback;
         },
 
         // insert shortcode into editor
@@ -86,14 +101,14 @@
             // placeholder images will be excluded (simply an empty string '' was returned instead)
             // var selectedTxt = tinymce.activeEditor.selection.getContent({format: 'text'}).trim();
             var selectedTxt = tinymce.activeEditor.selection.getContent().trim();
-            // console.log('78: '+selectedTxt);
+            // console.log('90: '+selectedTxt);
             // Convert a selection containing placeholder image (if any) to 'plain' shortcode
             selectedTxt = shortcodable.placeholdersToShortcodes(selectedTxt, tinyMCE.activeEditor);
-            // console.log('81: '+selectedTxt);
+            // console.log('93: '+selectedTxt);
 
             // Check if we're dealing with a shortcode in the first place
             if( selectedTxt.length<=2 || selectedTxt.charAt(0)!=='[' || selectedTxt.slice(-1)!==']') {
-                // console.log('85: returning');
+                // console.log('97: returning');
                 return;
             }
 
@@ -102,7 +117,7 @@
             $.each($(`<${selectedTxt.slice(1,-1)} />`).get(0).attributes, function(index, attr){
                 shortcodeData[attr.name] = attr.value
             });
-            // console.log('94: ', shortcodeData);
+            // console.log('106: ', shortcodeData);
 
             return shortcodeData;
         },
@@ -150,4 +165,4 @@
 
     };
 
-// })(jQuery);
+})(jQuery);

@@ -2,6 +2,7 @@
   "name": "base-package-json",
   "description": "Base package json",
   "scripts": {
+    "dev": "mix watch",
     "development": "mix",
     "watch": "mix watch",
     "watch-poll": "mix watch -- --watch-options-poll=1000",

@@ -63,51 +63,48 @@ $escaped-characters: (
         margin-bottom: 1rem;
     }
 
-    //.form-group--no-label {
-    //    border-bottom: 1px solid #dbe0e9;
-    //    padding-bottom: 1rem;
-    //}
-    .fieldRow {
-        //padding: 1rem 0;
-        .field {
-            padding-left: 15rem;
-            padding-top: .8rem;
-            padding-bottom: .8rem;
-            border-bottom: 1px solid #dbe0e9;
-            &.shortcode-type {
-                padding-left: 0;
-                padding-top: 0;
-                border-bottom: none;
-
-                .middleColumn {
-                    //box-shadow: 0 0 0 4px #f4f6f8;
-                    box-shadow: 0 0 0 2px #c1cad9;
-                    border-radius: 3px;
-                }
-            }
-
-            label.left {
-                float: left;
-                margin-left: -15rem;
-                max-width: 15rem;
-                padding-top: .8rem;
-                padding-right: .5rem;
-                line-height: 1.2;
-            }
-            &.checkbox {
-                margin-top: .4rem;
-            }
-        }
-        #Form_ShortcodeForm_ShortCodeHeading {
-            margin-bottom: .4rem;
-            margin-top: .8rem;
-            border-top: 1px solid #dbe0e9;
-            padding-top: 1rem;
+    #Form_ShortcodeForm_ShortCodeHeading {
+        border-top: 1px solid #e5e5e5;
+        padding-top: 1rem;
+        margin-bottom: 0.4rem;
+        &:before {
+            content: 'Shortcode: ';
+            font-size: 1rem;
+            font-weight: normal;
         }
     }
 
-    .form-actions {
+    div.field {
+        padding-left: 15rem;
+        padding-top: .8rem;
+        padding-bottom: .8rem;
+        border-bottom: 1px solid #dbe0e9;
+        &.shortcode-type {
+            padding-left: 0;
+            padding-top: 0;
+            border-bottom: none;
+
+            .middleColumn {
+                //box-shadow: 0 0 0 4px #f4f6f8;
+                box-shadow: 0 0 0 2px #e5e5e5;
+                border-radius: 3px;
+            }
+        }
+
+        label.left {
+            float: left;
+            margin-left: -15rem;
+            max-width: 15rem;
+            padding-top: .8rem;
+            padding-right: .5rem;
+            line-height: 1.2;
+        }
+        &.checkbox {
+            margin-top: .4rem;
+        }
+    }
+
+    .btn-toolbar {
         margin-top: 1.5rem;
-        margin-bottom: -1rem;
     }
 }

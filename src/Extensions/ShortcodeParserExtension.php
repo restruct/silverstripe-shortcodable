@@ -45,7 +45,7 @@ class ShortcodeParserExtension
 
                 return $return_str;
             },
-            $content
+            (string) $content
         );
     }
 }

@@ -32,36 +32,65 @@ var shortcodable_editorplugin = {
 
 // TinyMCE plugin definitions
 (function() {
-    if (typeof tinymce !== 'undefined') {
-        //
-        // TinyMCE~3 definition @TODO (or not... Since we're on TinyMCE 4+ anyway in Silverstripe 4+)
-        if(tinymce.majorVersion < 4){}
-        // TinyMCE 4+ definition (front-end/newest version)
-        else {
+    if (typeof tinymce === 'undefined') {
+        return;
+    }
 
-            tinymce.PluginManager.add('shortcodable', function(editor, url) {
+    if(tinymce.majorVersion <= 5){ // Silverstripe 4 - TinyMCE 4
 
-                // init (set listeners etc)
-                shortcodable_editorplugin.init(editor);
+        tinymce.PluginManager.add('shortcodable', function(editor, url) {
 
-                // Set some listeners
-                editor.on('beforeSetContent', function(e) {
-                    e.content = shortcodable_editorplugin.fromSrc(e.content, editor);
-                });
-                editor.on('postProcess', function(e) {
-                    e.content = shortcodable_editorplugin.toSrc(e.content, editor);
-                });
+            // init (set listeners etc)
+            shortcodable_editorplugin.init(editor);
 
-                // add button
-                editor.addButton('shortcodable', {
-                    classes: 'shortcodable',
-                    tooltip: 'Insert/edit shortcode',
-                    onclick: shortcodable.openDialog,
-                });
-
+            // Set some listeners
+            editor.on('beforeSetContent', function(e) {
+                e.content = shortcodable_editorplugin.fromSrc(e.content, editor);
+            });
+            editor.on('postProcess', function(e) {
+                e.content = shortcodable_editorplugin.toSrc(e.content, editor);
             });
 
-        }
+            // add button
+            editor.addButton('shortcodable', {
+                classes: 'shortcodable',
+                tooltip: 'Insert/edit shortcode',
+                onclick: shortcodable.openDialog,
+            });
+
+        });
+
+    } else { // Silverstripe 5 - TinyMCE 6 https://docs.silverstripe.org/en/5/changelogs/5.0.0/#tinymce6
+
+        tinymce.PluginManager.add('shortcodable', function(editor, url) {
+
+            // init (set listeners etc)
+            shortcodable_editorplugin.init(editor);
+
+            // Set some listeners
+            editor.on('beforeSetContent', function(e) {
+                e.content = shortcodable_editorplugin.fromSrc(e.content, editor);
+            });
+            editor.on('postProcess', function(e) {
+                e.content = shortcodable_editorplugin.toSrc(e.content, editor);
+            });
+
+            // add button (https://github.com/silverstripe/silverstripe-htmleditor-tinymce/blob/1/client/src/plugins/TinyMCE_sslink.js)
+            editor.ui.registry.addButton('shortcodable', {
+                classes: 'shortcodable',
+                tooltip: 'Insert/edit shortcode',
+                onAction: shortcodable.openDialog,
+                icon: 'shortcodable',
+            });
+            editor.ui.registry.addIcon(
+                'shortcodable',
+                '<svg width="16" height="16" viewBox="0 0 16 16">' +
+                        '<path d="M 0 0 L 0 16 L 5.34375 16 L 5.34375 14.414062 L 1.5859375 14.414062 L 1.5859375 1.5859375 L 5.34375 1.5859375 L 5.34375 0 L 0 0 z M 10.65625 0 L 10.65625 1.5859375 L 14.414062 1.5859375 L 14.414062 14.414062 L 10.65625 14.414062 L 10.65625 16 L 16 16 L 16 0 L 10.65625 0 z" />' +
+                        '</svg>'
+            );
+
+        });
+
     }
 
 })();

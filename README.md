@@ -1,4 +1,4 @@
-# Silverstripe 4 shortcode module
+# Silverstripe shortcode module
 
 Adds a ![](docs/screens/button.png) button to HTMLEditorField for CMS users to insert Shortcodes in page content.<br />
 Shortcodes can optionally be represented in TinyMCE with a placeholder image.

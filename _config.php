@@ -3,7 +3,7 @@
 use Shortcodable\Shortcodable;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Manifest\ModuleLoader;
-use SilverStripe\Forms\HTMLEditor\HtmlEditorConfig;
+use SilverStripe\TinyMCE\TinyMCEConfig;
 
 
 // enable shortcodable buttons and add to HtmlEditorConfig
@@ -11,7 +11,7 @@ $htmlEditorNames = Config::inst()->get(Shortcodable::class, 'htmleditor_names');
 if (is_array($htmlEditorNames)) {
     $shortcodableModuleResourceLoader = ModuleLoader::inst()->getManifest()->getModule('restruct/silverstripe-shortcodable');
     foreach ($htmlEditorNames as $htmlEditorName) {
-        HtmlEditorConfig::get($htmlEditorName)
+        TinyMCEConfig::get($htmlEditorName)
             ->enablePlugins([
                 'shortcodable' => $shortcodableModuleResourceLoader->getResource('client/dist/js/editor_plugin.js'),
             ])

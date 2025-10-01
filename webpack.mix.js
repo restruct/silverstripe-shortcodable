@@ -4,6 +4,7 @@ mix.setPublicPath('client/dist');
 mix.setResourceRoot('../');
 
 mix.sass('client/src/styles/shortcodable.scss', 'styles');
+mix.sass('client/src/styles/editor.scss', 'styles');
 
 mix.js('client/src/js/shortcodable.js', 'js');
 mix.js('client/src/js/editor_plugin.js', 'js');

@@ -1,0 +1,5 @@
+// reset startup-theme base img display block styling
+.mce-content-body img.sc-placeholder {
+    display: inline-block;
+    vertical-align: middle;
+}

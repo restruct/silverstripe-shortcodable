@@ -14,6 +14,10 @@ Shortcodable\Shortcodable:
   htmleditor_names:
     - cms
 
+SilverStripe\TinyMCE\TinyMCEConfig:
+  editor_css:
+    - 'restruct/silverstripe-shortcodable:client/dist/styles/editor.css'
+
 SilverStripe\Control\Director:
   rules:
     'admin/shortcodable': Shortcodable\Controllers\ShortcodableAdminController

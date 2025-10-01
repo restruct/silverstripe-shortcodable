@@ -3,11 +3,8 @@
 namespace Shortcodable\Extensions;
 
 use Shortcodable\Shortcodable;
-use SilverStripe\Assets\Shortcodes\ImageShortcodeProvider;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Extension;
-use SilverStripe\Dev\Debug;
-use SilverStripe\Dev\DebugView;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
 class ShortcodeParserExtension
@@ -19,7 +16,7 @@ class ShortcodeParserExtension
         // Since we cannot read the 'identifier' (ShortcodeParser::$active_instance), instead we filter on registered
         // shortcodes of the current instance to prevent running this on instances it shouldn't (eg 'regenerator');
         /** @var ShortcodeParser $parser */
-        $parser = $this->owner;
+        $parser = $this->getOwner();
         $sc_parser_instance_shortcodes = array_keys($parser->getRegisteredShortcodes());
         $sc_block_wrapped_map = [];
         foreach(Shortcodable::get_shortcodable_sc_class_map() as $sc_tag => $sc_class){

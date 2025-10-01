@@ -2,6 +2,7 @@
 
 namespace Shortcodable\Controllers;
 
+use SilverStripe\Control\HTTPResponse;
 use Shortcodable\Shortcodable;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Config\Config;
@@ -63,8 +64,8 @@ class ShortcodableAdminController
     {
         $shortcode_info = Shortcodable::shortcode_class_info();
         $shortcode = $this->request->postVar('ShortcodeType');
-        $classname = isset($shortcode_info['sc_class_map'][$shortcode]) ? $shortcode_info['sc_class_map'][$shortcode] : '';
-        $shortcodeLabel = isset($shortcode_info['sc_label_map'][$shortcode]) ? $shortcode_info['sc_label_map'][$shortcode] : $shortcode;
+        $classname = $shortcode_info['sc_class_map'][$shortcode] ?? '';
+        $shortcodeLabel = $shortcode_info['sc_label_map'][$shortcode] ?? $shortcode;
 
         // essential fields
         $fields = FieldList::create([
@@ -141,7 +142,7 @@ class ShortcodableAdminController
     /**
      * Generates shortcode placeholder img url to display inside TinyMCE instead of the shortcode.
      *
-     * @return \SilverStripe\Control\HTTPResponse|string|void
+     * @return HTTPResponse|string|void
      */
     public function shortcodePlaceHolder($request)
     {
@@ -175,7 +176,7 @@ class ShortcodableAdminController
 
         // default: return an URL to a SVG shortcode placeholder image
         $defaults = self::config()->get('default_placeholder');
-        $width = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_width'] : 60 + floor( ((int) $defaults['fontsize']) / 1.8 * strlen($request->requestVar('sc')) );
+        $width = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_width'] : 60 + floor( ((int) $defaults['fontsize']) / 1.8 * strlen((string) $request->requestVar('sc')) );
         $height = Config::inst()->get($sc_class, 'shortcode_close_parent') ? $defaults['full_height'] : $defaults['height'];
         // allow overriding by a config on the SC object class
         $sc_defaults = Config::inst()->get($sc_class, 'placeholder_settings');
@@ -207,7 +208,7 @@ class ShortcodableAdminController
         $bg = $req->getVar('bg') ?: $defaults['bg'];
         $txtclr = $req->getVar('fg') ?: $defaults['fg'];
         $font = str_replace('"', '\'', $req->getVar('ff') ?: $defaults['font'] );
-        $txt = $req->getVar('txt') ? htmlentities($req->getVar('txt')): "$w x $h";
+        $txt = $req->getVar('txt') ? htmlentities((string) $req->getVar('txt')): "$w x $h";
 
         $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"$render_h\" width=\"$render_w\" viewBox=\"0 0 $render_w $render_h\">
             <g>

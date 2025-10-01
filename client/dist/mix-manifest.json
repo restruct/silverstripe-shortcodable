@@ -1,5 +1,6 @@
 {
     "/js/shortcodable.js": "/js/shortcodable.js",
     "/js/editor_plugin.js": "/js/editor_plugin.js",
+    "/styles/editor.css": "/styles/editor.css",
     "/styles/shortcodable.css": "/styles/shortcodable.css"
 }

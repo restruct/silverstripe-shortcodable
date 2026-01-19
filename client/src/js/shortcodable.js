@@ -8,6 +8,9 @@
 
         initialized: false,
 
+        // Saved selection bookmark (restored before inserting shortcode)
+        savedBookmark: null,
+
         init: function() {
             // console.log('DEBUG: shortcodable – INIT');
             this.initialized = true;
@@ -37,6 +40,12 @@
         },
 
         openDialog: function() {
+            // Save selection bookmark before focus moves to modal
+            // (only when there's an actual selection, not just a cursor)
+            shortcodable.savedBookmark = tinyMCE.activeEditor.selection.isCollapsed()
+                ? null
+                : tinyMCE.activeEditor.selection.getBookmark(2);
+
             simpler.modal.show = true;
             simpler.modal.title = 'Insert/edit shortcode';
             simpler.modal.closeBtn = false;
@@ -80,6 +89,11 @@
             let shortcode = `[${shortcodeParts.join(' ')}]`;
 
             if (shortcode.length) {
+                // Restore saved selection (may have been lost when focus moved to modal)
+                if (shortcodable.savedBookmark) {
+                    tinyMCE.activeEditor.selection.moveToBookmark(shortcodable.savedBookmark);
+                    shortcodable.savedBookmark = null; // Clear after use
+                }
                 tinyMCE.activeEditor.selection.setContent(shortcode);
                 tinyMCE.activeEditor.undoManager.add(); // make snapshot so setContent is undo-able
 

@@ -2,11 +2,13 @@
 Name: shortcodable
 ---
 SilverStripe\Admin\LeftAndMain:
+  # Require AdminExtension for Vue import map + modal (simpler-silverstripe.js auto-loaded by module)
+  extensions:
+    - Restruct\Silverstripe\Simpler\AdminExtension
+  simpler_include_modal: true
   extra_requirements_javascript:
     - 'restruct/silverstripe-shortcodable:client/dist/js/editor_plugin.js'
     - 'restruct/silverstripe-shortcodable:client/dist/js/shortcodable.js'
-    # Require simpler object & jQuery/BootstrapJS/VueJS from SimplerSilverstripe module
-    - 'restruct/silverstripe-simpler:client/dist/js/simpler-silverstripe.js'
   extra_requirements_css:
     - 'restruct/silverstripe-shortcodable:client/dist/styles/shortcodable.css'
 

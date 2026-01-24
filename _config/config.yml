@@ -22,10 +22,6 @@ SilverStripe\Control\Director:
   rules:
     'admin/shortcodable': Shortcodable\Controllers\ShortcodableAdminController
 
-SilverStripe\Forms\HTMLEditor\HTMLEditorField:
-  extensions:
-    - Shortcodable\Extensions\HtmlEditorFieldExtension
-
 SilverStripe\View\Parsers\ShortcodeParser:
   extensions:
     - Shortcodable\Extensions\ShortcodeParserExtension

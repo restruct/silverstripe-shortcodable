@@ -20,7 +20,7 @@
     "require": {
         "silverstripe/vendor-plugin": ">=1.0",
         "silverstripe/framework": "^4 || ^5",
-        "restruct/silverstripe-simpler": "^0.2"
+        "restruct/silverstripe-simpler": "~0.2"
     },
     "replace": {
         "sheadawson/silverstripe-shortcodable": "*"

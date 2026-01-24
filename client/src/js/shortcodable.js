@@ -1,6 +1,7 @@
 // import _ from 'underscore';
 
-(function($) {
+(function() {
+    const $ = jQuery;
 
     shortcodable = {
 
@@ -145,13 +146,30 @@
 
         // Substitute shortcodes with placeholder images
         shortcodesToPlaceholders: function(source, editor) {
+            // Try multiple sources for shortcode placeholder codes:
+            // 1. data attribute (traditional server-rendered fields)
+            // 2. data-config JSON (React-rendered inline editors)
             var placeholder_shortcodes = $(editor.targetElm).data('shortcodableplaceholdercodes');
+
+            if (!placeholder_shortcodes) {
+                // Try parsing from data-config (TinyMCE config JSON)
+                var configStr = $(editor.targetElm).attr('data-config');
+                if (configStr) {
+                    try {
+                        var config = JSON.parse(configStr);
+                        placeholder_shortcodes = config.shortcodable_placeholder_codes;
+                    } catch (e) {
+                        console.warn('Could not parse data-config:', e);
+                    }
+                }
+            }
+
             if (placeholder_shortcodes) {
                 return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
                     if (placeholder_shortcodes.indexOf(name) !== -1) {
                        var id = shortcodable.parseAttributeValue(params, 'id');
                        var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
-                       var el = jQuery('<img/>')
+                       var el = $('<img/>')
                            .attr('type', 'image/svg+xml')
                            .attr('class', 'sc-placeholder mceItem mceNonEditable')
                            .attr('title', name + ' ' + params)
@@ -169,9 +187,9 @@
         // Substitutes placeholder images with their shortcode equivalents
         placeholdersToShortcodes: function(source, editor) {
             // find & replace .sc-placeholder images in the html
-            var wrappedContent = jQuery('<div>' + source + '</div>');
+            var wrappedContent = $('<div>' + source + '</div>');
             wrappedContent.find('.sc-placeholder').each(function () {
-                var el = jQuery(this);
+                var el = $(this);
                 el.replaceWith('[' + tinymce.trim(el.attr('title')) + ']');
             });
             return wrappedContent.html();
@@ -179,4 +197,4 @@
 
     };
 
-})(jQuery);
+})();

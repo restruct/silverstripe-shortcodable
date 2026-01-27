@@ -7,6 +7,15 @@ Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 This module is a partial-to-largely rewrite of sheadawson/silverstripe-shortcodable.<br>
 It depends on [Silverstripe Simpler](https://github.com/restruct/silverstripe-simpler) for some non-react UI functionalities (mainly the modal dialog).
 
+## Version Compatibility
+
+| Branch  | Module Version | Silverstripe   | PHP          |
+|---------|----------------|----------------|--------------|
+| `main`  | `5.x`          | ^6.0           | ^8.2         |
+| `ss4-5` | `4.x`          | ^4.0 \|\| ^5.0 | ^7.4 \|\| ^8.0 |
+
+**Note:** `composer.json` is the source of truth for exact version constraints.
+
 ## Configuration
 Register DataObjects or classes as shortcodable via Yaml config:
 

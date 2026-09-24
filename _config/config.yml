@@ -2,10 +2,18 @@
 Name: shortcodable
 ---
 SilverStripe\Admin\LeftAndMain:
+  # Require AdminExtension for Vue import map + modal (simpler-silverstripe.js auto-loaded by module)
+  # The shortcode dialog is simpler's modal (simpler.modal), which simpler only loads when
+  # simpler_include_modal is set on its AdminExtension; simpler-silverstripe.js alone does not provide it.
+  # Same config on simpler 0.2+/0.3 (Silverstripe 5) and simpler main (Silverstripe 6).
+  extensions:
+    - Restruct\Silverstripe\Simpler\AdminExtension
+  simpler_include_modal: true
   extra_requirements_javascript:
     - 'restruct/silverstripe-shortcodable:client/dist/js/editor_plugin.js'
     - 'restruct/silverstripe-shortcodable:client/dist/js/shortcodable.js'
     # Require simpler object & jQuery/BootstrapJS/VueJS from SimplerSilverstripe module
+    # (simpler's own config requires this file too; Requirements de-duplicates by path, so listing it here is harmless)
     - 'restruct/silverstripe-simpler:client/dist/js/simpler-silverstripe.js'
   extra_requirements_css:
     - 'restruct/silverstripe-shortcodable:client/dist/styles/shortcodable.css'
@@ -13,10 +21,6 @@ SilverStripe\Admin\LeftAndMain:
 Shortcodable\Shortcodable:
   htmleditor_names:
     - cms
-
-SilverStripe\TinyMCE\TinyMCEConfig:
-  editor_css:
-    - 'restruct/silverstripe-shortcodable:client/dist/styles/editor.css'
 
 SilverStripe\Control\Director:
   rules:
@@ -26,3 +30,21 @@ SilverStripe\View\Parsers\ShortcodeParser:
   extensions:
     - Shortcodable\Extensions\ShortcodeParserExtension
 
+# Placeholder styling inside the editor. TinyMCEConfig lives in a different namespace per Silverstripe
+# major, so the editor_css entry is declared once per class, each guarded by classexists.
+---
+Name: shortcodable-editorcss-ss6
+Only:
+  classexists: 'SilverStripe\TinyMCE\TinyMCEConfig'
+---
+SilverStripe\TinyMCE\TinyMCEConfig:
+  editor_css:
+    - 'restruct/silverstripe-shortcodable:client/dist/styles/editor.css'
+---
+Name: shortcodable-editorcss-ss5
+Only:
+  classexists: 'SilverStripe\Forms\HTMLEditor\TinyMCEConfig'
+---
+SilverStripe\Forms\HTMLEditor\TinyMCEConfig:
+  editor_css:
+    - 'restruct/silverstripe-shortcodable:client/dist/styles/editor.css'

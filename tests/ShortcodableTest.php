@@ -7,6 +7,7 @@ use Shortcodable\Tests\Stub\BlockShortcode;
 use Shortcodable\Tests\Stub\CustomCallbackShortcode;
 use Shortcodable\Tests\Stub\ShortcodableRecord;
 use Shortcodable\Tests\Stub\SimpleShortcode;
+use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorConfig;
@@ -162,5 +163,35 @@ class ShortcodableTest extends SapphireTest
         // addButtonsToLine() stores the string as given, separator included
         $this->assertContains('| shortcodable', $config->getButtons()[1]);
         $this->assertIsArray($config->getOption('shortcodable_placeholder_codes'));
+    }
+
+    public function testEditorCssIsConfiguredOnThisMajorsTinymceConfig()
+    {
+        // _config/config.yml declares editor_css once per TinyMCEConfig namespace, each behind a
+        // classexists guard. Assert the entry landed on the class this major actually provides.
+        if (class_exists('SilverStripe\\TinyMCE\\TinyMCEConfig')) {
+            $class = 'SilverStripe\\TinyMCE\\TinyMCEConfig';
+        } elseif (class_exists('SilverStripe\\Forms\\HTMLEditor\\TinyMCEConfig')) {
+            $class = 'SilverStripe\\Forms\\HTMLEditor\\TinyMCEConfig';
+        } else {
+            $this->markTestSkipped('No TinyMCE installed (Silverstripe 6 without silverstripe/htmleditor-tinymce)');
+        }
+
+        $this->assertContains(
+            'restruct/silverstripe-shortcodable:client/dist/styles/editor.css',
+            (array) Config::inst()->get($class, 'editor_css'),
+            "$class editor_css does not include the module's editor.css"
+        );
+    }
+
+    public function testLeftAndMainLoadsSimplerWithItsModal()
+    {
+        // The shortcode dialog is simpler's modal, which simpler only loads when its AdminExtension is
+        // applied AND simpler_include_modal is set
+        $this->assertTrue(
+            LeftAndMain::has_extension('Restruct\\Silverstripe\\Simpler\\AdminExtension'),
+            'LeftAndMain does not have simpler\'s AdminExtension'
+        );
+        $this->assertTrue(Config::inst()->get(LeftAndMain::class, 'simpler_include_modal'));
     }
 }

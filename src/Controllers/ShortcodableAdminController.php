@@ -191,24 +191,38 @@ class ShortcodableAdminController
      * adapted from https://gist.github.com/james2doyle/3aad1d22163c3c3e5cfd
      * Usage: <img src="shortcodable/placehold.img?w=400&h=400&bg=bada55&fg=000000&ff=Georgia&fs=20&txt=placeholdertext" />
      *
+     * Every request variable is validated or escaped before it goes into the SVG: the image is served
+     * same-origin as image/svg+xml, so anything interpolated raw is script in a logged-in CMS session.
+     * Invalid values fall back to the `default_placeholder` config.
+     *
      * @param $request
-     * @return void
+     * @return HTTPResponse
      */
     public function shortcodePlaceholderImage()
     {
         $req = $this->getRequest();
         $defaults = self::config()->get('default_placeholder');
 
-        $w = $req->getVar('w') ?: $defaults['width'];
-        $h = $req->getVar('h') ?: $defaults['height'];
+        $w = $this->sanitisePlaceholderSize($req->getVar('w'), $defaults['width']);
+        $h = $this->sanitisePlaceholderSize($req->getVar('h'), $defaults['height']);
         $render_w = ($w=='100%' ? $defaults['full_width'] : min($w, $defaults['full_width']));
         $render_h = ($h=='100%' ? $defaults['full_height'] : min($h, $defaults['full_height']));
 
         $txtsize = (int) $req->getVar('txtsize') ?: $defaults['fontsize'];
-        $bg = $req->getVar('bg') ?: $defaults['bg'];
-        $txtclr = $req->getVar('fg') ?: $defaults['fg'];
+        # a negative or zero font size is as invalid as a non-numeric one
+        if ($txtsize <= 0) {
+            $txtsize = (int) $defaults['fontsize'];
+        }
+        $bg = $this->sanitisePlaceholderColour($req->getVar('bg'), $defaults['bg']);
+        $txtclr = $this->sanitisePlaceholderColour($req->getVar('fg'), $defaults['fg']);
         $font = str_replace('"', '\'', $req->getVar('ff') ?: $defaults['font'] );
-        $txt = $req->getVar('txt') ? htmlentities((string) $req->getVar('txt')): "$w x $h";
+        # font-family is an attribute value: escape everything, quotes included (the default font list
+        # contains single quotes, which survive as &#039; and are decoded again by the XML parser)
+        $font = htmlspecialchars((string) $font, ENT_QUOTES | ENT_XML1, 'UTF-8');
+//        $txt = $req->getVar('txt') ? htmlentities((string) $req->getVar('txt')): "$w x $h";
+        # htmlspecialchars rather than htmlentities: named HTML entities such as &eacute; are not defined in
+        # XML, so htmlentities() turned any accented character into an SVG parse error
+        $txt = htmlspecialchars($req->getVar('txt') ? (string) $req->getVar('txt') : "$w x $h", ENT_QUOTES | ENT_XML1, 'UTF-8');
 
         $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"$render_h\" width=\"$render_w\" viewBox=\"0 0 $render_w $render_h\">
             <g>
@@ -218,10 +232,50 @@ class ShortcodableAdminController
             </g>
         </svg>";
 
-        $this->getResponse()
+        # Returned rather than output() directly: the framework sends the response, and returning it
+        # keeps the action usable from tests and from anything that post-processes the response.
+//        $this->getResponse()
+//            ->addHeader('Content-Type', 'image/svg+xml')
+//            ->setBody($svg)
+//            ->output();
+        return $this->getResponse()
             ->addHeader('Content-Type', 'image/svg+xml')
-            ->setBody($svg)
-            ->output();
+            ->setBody($svg);
+    }
+
+    /**
+     * A placeholder dimension: a positive whole number of pixels, or '100%'. Anything else yields the default.
+     *
+     * @param mixed $value raw request variable
+     * @param int|string $default
+     * @return int|string
+     */
+    protected function sanitisePlaceholderSize($value, $default)
+    {
+        if ($value === '100%') {
+            return $value;
+        }
+        if (is_scalar($value) && ctype_digit((string) $value) && (int) $value > 0) {
+            return (int) $value;
+        }
+
+        return $default;
+    }
+
+    /**
+     * A placeholder colour: 3 or 6 hex digits, without the leading '#'. Anything else yields the default.
+     *
+     * @param mixed $value raw request variable
+     * @param string $default
+     * @return string
+     */
+    protected function sanitisePlaceholderColour($value, $default)
+    {
+        if (is_string($value) && preg_match('/^(?:[0-9a-f]{3}){1,2}$/i', $value)) {
+            return $value;
+        }
+
+        return $default;
     }
 
 }

@@ -109,6 +109,29 @@ class Shortcodable
         return $placeholderClasses;
     }
 
+    /**
+     * Whether an editor config is a TinyMCE config, i.e. one the shortcodable plugin and button can be added to.
+     *
+     * Checked by class NAME on purpose: TinyMCEConfig lives in framework on Silverstripe 5
+     * (SilverStripe\Forms\HTMLEditor\TinyMCEConfig) and in the separate silverstripe/htmleditor-tinymce
+     * module on Silverstripe 6 (SilverStripe\TinyMCE\TinyMCEConfig), so at most one of the two exists in
+     * any install. `instanceof` against a class that does not exist is simply false - it does not autoload
+     * and does not error - which is what makes this safe on both majors.
+     *
+     * @param object|null $editorConfig typically the result of HTMLEditorConfig::get($identifier)
+     * @return bool
+     */
+    public static function is_tinymce_config($editorConfig)
+    {
+        foreach (['SilverStripe\\TinyMCE\\TinyMCEConfig', 'SilverStripe\\Forms\\HTMLEditor\\TinyMCEConfig'] as $tinyMceConfigClass) {
+            if ($editorConfig instanceof $tinyMceConfigClass) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public static function get_shortcodable_sc_class_map()
     {
         $shortcodableInfo = static::shortcode_class_info();

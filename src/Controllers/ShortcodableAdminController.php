@@ -215,14 +215,27 @@ class ShortcodableAdminController
         }
         $bg = $this->sanitisePlaceholderColour($req->getVar('bg'), $defaults['bg']);
         $txtclr = $this->sanitisePlaceholderColour($req->getVar('fg'), $defaults['fg']);
-        $font = str_replace('"', '\'', $req->getVar('ff') ?: $defaults['font'] );
+        # ff and txt are cast to string below: an array (?ff[]=x, ?txt[]=x) would raise 'Array to string
+        # conversion', so a non-scalar value is treated as invalid input and falls back to the default,
+        # the same way sanitisePlaceholderSize()/sanitisePlaceholderColour() treat w/h/bg/fg
+        $ff = $req->getVar('ff');
+        if (!is_scalar($ff)) {
+            $ff = null;
+        }
+        $txtVar = $req->getVar('txt');
+        if (!is_scalar($txtVar)) {
+            $txtVar = null;
+        }
+//        $font = str_replace('"', '\'', $req->getVar('ff') ?: $defaults['font'] );
+        $font = str_replace('"', '\'', $ff ?: $defaults['font'] );
         # font-family is an attribute value: escape everything, quotes included (the default font list
         # contains single quotes, which survive as &#039; and are decoded again by the XML parser)
         $font = htmlspecialchars((string) $font, ENT_QUOTES | ENT_XML1, 'UTF-8');
 //        $txt = $req->getVar('txt') ? htmlentities((string) $req->getVar('txt')): "$w x $h";
         # htmlspecialchars rather than htmlentities: named HTML entities such as &eacute; are not defined in
         # XML, so htmlentities() turned any accented character into an SVG parse error
-        $txt = htmlspecialchars($req->getVar('txt') ? (string) $req->getVar('txt') : "$w x $h", ENT_QUOTES | ENT_XML1, 'UTF-8');
+//        $txt = htmlspecialchars($req->getVar('txt') ? (string) $req->getVar('txt') : "$w x $h", ENT_QUOTES | ENT_XML1, 'UTF-8');
+        $txt = htmlspecialchars($txtVar ? (string) $txtVar : "$w x $h", ENT_QUOTES | ENT_XML1, 'UTF-8');
 
         $svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" height=\"$render_h\" width=\"$render_w\" viewBox=\"0 0 $render_w $render_h\">
             <g>

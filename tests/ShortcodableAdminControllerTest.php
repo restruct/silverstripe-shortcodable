@@ -265,6 +265,34 @@ class ShortcodableAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('fill="#ffffff"', $svg);
     }
 
+    /**
+     * Regression: `ff` and `txt` were (string)-cast without a scalar check, so an array request
+     * variable (?ff[]=x, ?txt[]=x) raised 'Array to string conversion'. It must be treated like any
+     * other invalid value: fall back to the default.
+     */
+    public function testPlaceholderImageFallsBackToTheDefaultFontForANonScalarFont()
+    {
+        $this->logInAsCmsUser();
+        [$response, $svg] = $this->fetchPlaceholderImage(['ff' => ['b'], 'txt' => 'x']);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotFalse(@simplexml_load_string($svg), 'placeholder SVG is not well-formed XML');
+        $this->assertStringContainsString('font-family="Consolas, ', $svg);
+        $this->assertStringNotContainsString('Array', $svg);
+    }
+
+    public function testPlaceholderImageFallsBackToTheSizeTextForANonScalarText()
+    {
+        $this->logInAsCmsUser();
+        [$response, $svg] = $this->fetchPlaceholderImage(['w' => 300, 'h' => 50, 'txt' => ['a']]);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotFalse(@simplexml_load_string($svg), 'placeholder SVG is not well-formed XML');
+        // the default text is "<w> x <h>"
+        $this->assertStringContainsString('>300 x 50</text>', $svg);
+        $this->assertStringNotContainsString('Array', $svg);
+    }
+
     private function redirectQuery(HTTPResponse $response): array
     {
         $location = (string) $response->getHeader('Location');

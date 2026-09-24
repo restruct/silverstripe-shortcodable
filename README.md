@@ -34,7 +34,7 @@ composer require silverstripe/htmleditor-tinymce
 | Branch  | Module Version | Silverstripe   | PHP            |
 |---------|----------------|----------------|----------------|
 | `main`  | `5.x` (from `5.1.0`) | `^5 \|\| ^6` | `^8.1`   |
-| `ss4-5` | `4.x`          | `^4 \|\| ^5`   | `^7.4 \|\| ^8.0` |
+| `v4`    | `4.x`          | `^4 \|\| ^5`   | `^7.4 \|\| ^8.0` |
 
 `main` is the maintained line and supports every Silverstripe version this module still targets.
 Silverstripe 4 reached end of life in April 2025 and is no longer supported or tested here; projects

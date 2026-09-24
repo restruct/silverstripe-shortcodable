@@ -6,6 +6,8 @@
 `^8.1`. Silverstripe 4 is no longer supported or tested; the `4.x` tags stay available for projects
 still on it. Upgrade notes: [UPGRADING.md](UPGRADING.md).
 
+The placeholder image fix below was also released for the 4.x line as 4.0.17 (branch `v4`, formerly `ss4-5`).
+
 ### Fixed
 
 - **The 5.0.x releases could not be installed from Packagist.** They required

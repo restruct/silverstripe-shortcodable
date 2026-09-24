@@ -1,5 +1,8 @@
 # Silverstripe shortcode module
 
+*Maintained by [Restruct](https://github.com/restruct). If this module saves you time, you can
+[support ongoing maintenance](https://github.com/sponsors/restruct).*
+
 Adds a ![](docs/screens/button.png) button to HTMLEditorField for CMS users to insert Shortcodes in page content.<br />
 Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 
@@ -7,12 +10,35 @@ Shortcodes can optionally be represented in TinyMCE with a placeholder image.
 This module is a partial-to-largely rewrite of sheadawson/silverstripe-shortcodable.<br>
 It depends on [Silverstripe Simpler](https://github.com/restruct/silverstripe-simpler) for some non-react UI functionalities (mainly the modal dialog).
 
+## Requirements
+
+* Silverstripe 5 or 6 (`silverstripe/framework ^5 || ^6`)
+* PHP 8.1 or newer (Silverstripe 6 itself needs 8.3)
+* [restruct/silverstripe-simpler](https://github.com/restruct/silverstripe-simpler), installed automatically:
+  its `0.x` line on Silverstripe 5, its `1.x` line on Silverstripe 6
+* **Silverstripe 6 only:** `silverstripe/htmleditor-tinymce`. TinyMCE is a separate module on Silverstripe 6
+  and `silverstripe/recipe-cms` does not include it. Without it the site still boots, but there is no
+  TinyMCE editor to add the shortcode button to.
+
+## Installation
+
+```
+composer require restruct/silverstripe-shortcodable
+# Silverstripe 6, if your project does not have it yet:
+composer require silverstripe/htmleditor-tinymce
+```
+
 ## Version Compatibility
 
-| Branch  | Module Version | Silverstripe   | PHP          |
-|---------|----------------|----------------|--------------|
-| `main`  | `5.x`          | ^6.0           | ^8.2         |
-| `ss4-5` | `4.x`          | ^4.0 \|\| ^5.0 | ^7.4 \|\| ^8.0 |
+| Branch  | Module Version | Silverstripe   | PHP            |
+|---------|----------------|----------------|----------------|
+| `main`  | `5.x` (from `5.1.0`) | `^5 \|\| ^6` | `^8.1`   |
+| `ss4-5` | `4.x`          | `^4 \|\| ^5`   | `^7.4 \|\| ^8.0` |
+
+`main` is the maintained line and supports every Silverstripe version this module still targets.
+Silverstripe 4 reached end of life in April 2025 and is no longer supported or tested here; projects
+still on it can stay on the `4.x` tags, which remain available. The `5.0.x` tags declared Silverstripe 6
+only, and could not be installed from Packagist (see [CHANGELOG.md](CHANGELOG.md)); use `^5.1`.
 
 **Note:** `composer.json` is the source of truth for exact version constraints.
 
@@ -33,6 +59,23 @@ Shortcodable\Shortcodable:
 ---
 ```
 
+### Configuration options
+
+| Option | Default | What it does |
+|--------|---------|--------------|
+| `Shortcodable\Shortcodable.shortcodable_classes` | `[]` | Classes to register with the shortcode parser and offer in the dialog. |
+| `Shortcodable\Shortcodable.htmleditor_names` | `[cms]` | HTMLEditor configs that get the shortcode button. Only TinyMCE configs are changed; others are skipped. |
+| `Shortcodable\Controllers\ShortcodableAdminController.default_placeholder` | see class | Size, font and colours of the default SVG placeholder (`width`, `height`, `full_width`, `full_height`, `font`, `fontsize`, `fg`, `bg`). |
+
+Per shortcodable class (as `private static` or YAML on that class):
+
+| Option | Default | What it does |
+|--------|---------|--------------|
+| `shortcode` | short class name | The shortcode tag, eg `currentyear` for `[currentyear]`. |
+| `shortcode_callback` | `parse_shortcode` | Name of the parser method. |
+| `shortcode_close_parent` | `false` | Block-level output: close the wrapping element before the shortcode and reopen it after (see below). Also gives the default placeholder the full size. |
+| `placeholder_settings` | none | `width`/`height` overriding the default placeholder size for this shortcode. |
+
 
 ## Required methods on shortcodable objects/classes
 
@@ -44,7 +87,7 @@ Implement these methods on your shortcodable classes (may also be added via an E
 `public function MyCustomParser(...)` combined with:<br />
 `private static $shortcode_callback = 'MyCustomParser'`<br />
 
-**Parser method arguments:** (see [shortcode documentation](https://docs.silverstripe.org/en/4/developer_guides/extending/shortcodes/#parameter-values)) <br />
+**Parser method arguments:** (see [shortcode documentation](https://docs.silverstripe.org/en/6/developer_guides/extending/shortcodes/#parameter-values)) <br />
    `($attrs, $content=null, $parser=null, $shortcode, $info)`
 
 **NOTE: the parser method gets called on a singleton object instance.**<br />
@@ -60,7 +103,7 @@ Implement these methods on your shortcodable classes (may also be added via an E
 
 **Wrapping (optional):**
 In this module, `$shortcodable_is_block` and `$disable_wrapper` have been replaced with `$shortcode_close_parent`:<br>
-- `private static $shortcode_is_block` (optional, set to true if your shortcode output is a block-type html element)
+- `private static $shortcode_close_parent` (optional, set to true if your shortcode output is a block-type html element)
 
 If you set `$shortcode_close_parent` to true, the parent node will be closed before your shortcode output and reopened after. <br>
 Eg `<p>Some [shortcode] content</p>` would become `<p>Some </p>[shortcode]<p> content</p>`;
@@ -95,6 +138,31 @@ public function getShortcodePlaceHolder($attributes)
 }
 ```
 
+### Default placeholder image
+
+Without `getShortcodePlaceHolder()`, the editor shows an SVG generated by `admin/shortcodable/placehold.img`
+(CMS access required). It takes `w` and `h` (a positive number of pixels, or `100%`), `bg` and `fg`
+(3 or 6 hex digits, no `#`), `ff` (font family), `txtsize` and `txt`. Invalid values fall back to the
+`default_placeholder` config.
+
+## Running the tests
+
+The module cannot be tested on its own: it needs a host Silverstripe project. Require it there
+through a Composer **path repository with `symlink: true`** - `/tests` is `export-ignore`, so a dist
+or mirrored install contains no tests - add `"Shortcodable\\Tests\\": "vendor/restruct/silverstripe-shortcodable/tests/"`
+to the host's `autoload-dev`, then:
+
+```bash
+# Silverstripe 5 (PHPUnit 9) - the path must come before flush=1
+vendor/bin/phpunit vendor/restruct/silverstripe-shortcodable/tests flush=1
+
+# Silverstripe 6 (PHPUnit 11) - a flush=1 argument is ignored, use the env var
+SS_PHPUNIT_FLUSH=1 vendor/bin/phpunit vendor/restruct/silverstripe-shortcodable/tests
+```
+
+On Silverstripe 6 the host also needs `silverstripe/htmleditor-tinymce`, or the TinyMCE button test is
+skipped. CI runs the suite against Silverstripe 5 and 6 on every push; see `.github/workflows/ci.yml`.
+
 ## Status
 
 - [x] TinyMCE button/plugin
@@ -111,5 +179,5 @@ public function getShortcodePlaceHolder($attributes)
 
 
 ## Refs:
-- [General shortcode documentation](https://docs.silverstripe.org/en/4/developer_guides/extending/shortcodes/)
+- [General shortcode documentation](https://docs.silverstripe.org/en/6/developer_guides/extending/shortcodes/)
 - [Shortcodable V2 documentation](https://github.com/sheadawson/silverstripe-shortcodable/blob/e2e2f1a2fa981d56e3c8ba63808fbe05da3d20f0/README.md)

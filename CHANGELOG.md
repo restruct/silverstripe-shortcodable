@@ -35,6 +35,8 @@ still on it. Upgrade notes: [UPGRADING.md](UPGRADING.md).
   on 6).
 - `composer.json`: `silverstripe/vendor-plugin ^2 || ^3`, explicit `php ^8.1`, a `suggest` for
   `silverstripe/htmleditor-tinymce`, and a `funding` entry.
+- `composer.json` requires `silverstripe/admin ^2 || ^3`. The module's config and controller build on
+  `LeftAndMain`, which is part of admin, not framework; it was previously only pulled in indirectly.
 
 ### Added
 

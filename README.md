@@ -15,7 +15,8 @@ It depends on [Silverstripe Simpler](https://github.com/restruct/silverstripe-si
 * Silverstripe 5 or 6 (`silverstripe/framework ^5 || ^6`)
 * PHP 8.1 or newer (Silverstripe 6 itself needs 8.3)
 * [restruct/silverstripe-simpler](https://github.com/restruct/silverstripe-simpler), installed automatically:
-  its `0.x` line on Silverstripe 5, its `1.x` line on Silverstripe 6
+  its `0.x` line (`~0.2`) on Silverstripe 5; on Silverstripe 6 it requires restruct/silverstripe-simpler
+  1.0.0 or later
 * **Silverstripe 6 only:** `silverstripe/htmleditor-tinymce`. TinyMCE is a separate module on Silverstripe 6
   and `silverstripe/recipe-cms` does not include it. Without it the site still boots, but there is no
   TinyMCE editor to add the shortcode button to.

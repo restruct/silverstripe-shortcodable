@@ -21,6 +21,8 @@ Differences you may notice:
 
 ### On Silverstripe 6
 
+On Silverstripe 6 this module requires restruct/silverstripe-simpler 1.0.0 or later.
+
 Require TinyMCE, which Silverstripe 6 ships as a separate module and `recipe-cms` does not include:
 
 ```bash

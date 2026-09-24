@@ -227,6 +227,16 @@ class ShortcodableAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('height="460"', $svg);
     }
 
+    public function testPlaceholderImageCapsAnOversizedWidthAtTheConfiguredFullWidth()
+    {
+        // the height cap is covered above; this pins the width cap (min($w, full_width)) on its own
+        $this->logInAsCmsUser();
+        [, $svg] = $this->fetchPlaceholderImage(['w' => 5000, 'h' => 50, 'txt' => 'x']);
+
+        $this->assertStringContainsString('width="1000"', $svg);
+        $this->assertStringNotContainsString('5000', $svg);
+    }
+
     /**
      * Regression: every request variable of placehold.img was interpolated into the SVG unescaped
      * (only `txt` went through htmlentities, and without ENT_QUOTES on PHP 8.0). The SVG is served

@@ -1,6 +1,6 @@
 # Changelog
 
-## 5.1.0 (unreleased)
+## 5.1.0 (2026-09-25)
 
 **One line for Silverstripe 5 and 6.** `main` now declares `silverstripe/framework ^5 || ^6` on PHP
 `^8.1`. Silverstripe 4 is no longer supported or tested; the `4.x` tags stay available for projects

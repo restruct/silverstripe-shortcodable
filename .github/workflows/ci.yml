@@ -100,11 +100,10 @@ jobs:
           if [ "${{ matrix.silverstripe }}" = "6" ]; then
             # TinyMCE is a separate module on Silverstripe 6 and recipe-cms does not include it.
             composer require --no-update silverstripe/htmleditor-tinymce:^1
-            # restruct/silverstripe-simpler has no 1.x release yet, so ^1 cannot resolve from Packagist.
-            # Alias its main branch until 1.0.0 is tagged - then DELETE this line, so CI proves the
-            # published constraint resolves.
-            # TODO: remove this alias once restruct/silverstripe-simpler 1.0.0 is tagged.
-            composer require --no-update "restruct/silverstripe-simpler:dev-main as 1.0.0"
+            # restruct/silverstripe-simpler 1.0.0 is released (2026-09-25), so ^1 now resolves from
+            # Packagist and CI proves the published constraint. The alias used until then is kept
+            # below, disabled:
+            # composer require --no-update "restruct/silverstripe-simpler:dev-main as 1.0.0"
           fi
           composer update --no-interaction --no-progress
 

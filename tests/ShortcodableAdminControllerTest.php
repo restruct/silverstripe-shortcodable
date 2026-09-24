@@ -265,6 +265,15 @@ class ShortcodableAdminControllerTest extends FunctionalTest
         $this->assertStringContainsString('fill="#ffffff"', $svg);
     }
 
+    public function testPlaceholderImageCapsTheFontSizeAtTheConfiguredFullHeight()
+    {
+        $this->logInAsCmsUser();
+        [, $svg] = $this->fetchPlaceholderImage(['txtsize' => 999999, 'txt' => 'x']);
+
+        $this->assertStringContainsString('font-size="460"', $svg);
+        $this->assertStringNotContainsString('999999', $svg);
+    }
+
     /**
      * Regression: `ff` and `txt` were (string)-cast without a scalar check, so an array request
      * variable (?ff[]=x, ?txt[]=x) raised 'Array to string conversion'. It must be treated like any

@@ -213,6 +213,10 @@ class ShortcodableAdminController
         if ($txtsize <= 0) {
             $txtsize = (int) $defaults['fontsize'];
         }
+        # and capped like w/h are capped at full_width/full_height: text taller than the tallest canvas the
+        # placeholder can ever be rendered at (full_height) cannot be displayed, so a larger value only
+        # bloats the SVG with a meaningless number
+        $txtsize = min($txtsize, (int) $defaults['full_height']);
         $bg = $this->sanitisePlaceholderColour($req->getVar('bg'), $defaults['bg']);
         $txtclr = $this->sanitisePlaceholderColour($req->getVar('fg'), $defaults['fg']);
         # ff and txt are cast to string below: an array (?ff[]=x, ?txt[]=x) would raise 'Array to string

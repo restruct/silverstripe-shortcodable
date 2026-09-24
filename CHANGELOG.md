@@ -11,7 +11,7 @@ The placeholder image fix below was also released for the 4.x line as 4.0.17 (br
 ### Fixed
 
 - **The 5.0.x releases could not be installed from Packagist.** They required
-  `restruct/silverstripe-simpler ~1.0`, and simpler has no 1.x release, so Composer refused every
+  `restruct/silverstripe-simpler ~1.0`, and simpler had no 1.x release until 1.0.0 (2026-09-25), so Composer refused every
   5.0.x tag. The constraint is now `~0.2 || ^1`: the simpler line matching each Silverstripe major.
 - **Silverstripe 6 without `silverstripe/htmleditor-tinymce` fatal on every request** with
   `Class "SilverStripe\TinyMCE\TinyMCEConfig" not found` from `_config.php`. `recipe-cms` 6 does not

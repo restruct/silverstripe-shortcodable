@@ -1,0 +1,11 @@
+---
+Name: scb-browser-fixtures
+After: '#shortcodable'
+---
+# BROWSER-TEST FIXTURE ONLY - copied to the scratch host's app/_config/browser-fixtures/ by the
+# runner (fixture YAML in app/src would never be read). Registers the fixture shortcodes the way a
+# project does, through config.
+Shortcodable\Shortcodable:
+  shortcodable_classes:
+    - Restruct\ScbBrowser\ScbYearShortcode
+    - Restruct\ScbBrowser\ScbRecord

@@ -120,6 +120,8 @@ jobs:
               <testsuites>
                   <testsuite name="shortcodable">
                       <directory>vendor/restruct/silverstripe-shortcodable/tests</directory>
+                      <!-- Playwright specs and their CMS fixtures, run by the Browser tests workflow -->
+                      <exclude>vendor/restruct/silverstripe-shortcodable/tests/browser</exclude>
                   </testsuite>
                   <testsuite name="consumer">
                       <directory>app/tests</directory>

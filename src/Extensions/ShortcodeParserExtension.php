@@ -111,49 +111,71 @@ class ShortcodeParserExtension
         # Enclosed content (`[sc]...[/sc]`) is matched as in the original regex: no '[' inside it.
         # Element names may contain hyphens (custom elements, eg <my-el>), so the name runs on to
         # whitespace, '/' or '>' rather than to a word boundary, which would cut it at the hyphen.
-        $pattern = '%(?<comment><!--.*?-->)'
+        # Two scans are bounded so the pass stays linear: an unterminated comment runs to the end of
+        # the content (as it does for an HTML parser), instead of every '<!--' re-scanning to the end;
+        # and a shortcode's attributes stop at the next '[', so many '[tag' without a ']' do not each
+        # scan the rest of the content.
+        $pattern = '%(?<comment><!--.*?(?:-->|$))'
             . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])[^>]*>)'
-            . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
-        if (!preg_match_all($pattern, $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
-            return $content;
-        }
-
-        # Tokenise: text between the matches, plus each match with its kind
-        $tokens = [];
+            . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]\[]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
+        # Tokenise: text between the matches, plus each match with its kind. One match at a time
+        # (preg_match from an offset, not preg_match_all) and kept as three flat lists rather than an
+        # array per token: on large content the full match set and per-token arrays cost several
+        # hundred MB.
+        $kinds = $strings = $names = [];
         $cursor = 0;
-        foreach ($matches as $match) {
+        $length = strlen($content);
+        while ($cursor < $length && preg_match($pattern, $content, $match, PREG_OFFSET_CAPTURE, $cursor)) {
             [$string, $offset] = $match[0];
             if ($offset > $cursor) {
-                $tokens[] = ['text', substr($content, $cursor, $offset - $cursor), null];
+                $kinds[] = 'text';
+                $strings[] = substr($content, $cursor, $offset - $cursor);
+                $names[] = null;
             }
             if (isset($match['sc']) && $match['sc'][1] !== -1) {
-                $tokens[] = ['sc', $string, null];
+                $kinds[] = 'sc';
+                $names[] = null;
             } elseif (isset($match['tag']) && $match['tag'][1] !== -1) {
-                $tokens[] = ['tag', $string, strtolower($match['name'][0])];
+                $kinds[] = 'tag';
+                $names[] = strtolower($match['name'][0]);
             } else {
-                $tokens[] = ['text', $string, null];
+                $kinds[] = 'text';
+                $names[] = null;
             }
-            $cursor = $offset + strlen($string);
+            $strings[] = $string;
+            # An empty match cannot happen (every alternative starts with a literal), but never loop on one
+            $cursor = $offset + max(1, strlen($string));
         }
-        if ($cursor < strlen($content)) {
-            $tokens[] = ['text', substr($content, $cursor), null];
+        if (!in_array('sc', $kinds, true)) {
+            # No block shortcode outside a tag or comment: nothing to do
+            return $content;
+        }
+        if ($cursor < $length) {
+            $kinds[] = 'text';
+            $strings[] = substr($content, $cursor);
+            $names[] = null;
         }
 
-        $out = '';
+        # The output is collected as a list of parts, one per token or inserted tag, and joined once at
+        # the end. The clean-ups below only look at, or drop, the last few parts: working on the whole
+        # output string instead (a regex or rtrim() over it, per shortcode) made the walk quadratic.
+        $out = [];
         # Open elements, outermost first: [name, original opening tag]
         $stack = [];
-        $count = count($tokens);
+        $count = count($kinds);
         for ($i = 0; $i < $count; $i++) {
-            [$kind, $string, $name] = $tokens[$i];
+            $kind = $kinds[$i];
+            $string = $strings[$i];
+            $name = $names[$i];
 
             if ($kind === 'tag') {
-                $out .= $string;
+                $out[] = $string;
                 $this->trackTag($stack, $string, $name);
                 continue;
             }
             if ($kind !== 'sc' || !$stack) {
                 # Text, comments, and a block shortcode with no wrapping element: nothing to close
-                $out .= $string;
+                $out[] = $string;
                 continue;
             }
 
@@ -167,31 +189,36 @@ class ShortcodeParserExtension
             }
 
             # <br></p>[sc] -> </p>[sc] (a line break right before block output only adds a blank line)
-            $out = preg_replace('%<br\s*/?>\s*$%i', '', $out);
+            $last = $this->lastNonBlankPart($out);
+            if ($last !== null && preg_match('%^<br\s*/?>$%i', $out[$last])) {
+                $this->dropPartsFrom($out, $last);
+            }
             foreach ($chain as [$elName, $openTag]) {
                 # <p></p>[sc] -> [sc]: the element would be left empty, so drop its opening tag instead.
                 # Only a bare opening tag, as before: one with attributes (an id used as an anchor, a
-                # class) is closed and kept, even if empty.
-                $trimmed = rtrim($out);
-                if (preg_match('%^<[a-z0-9]+\\s*>$%i', $openTag) && substr($trimmed, -strlen($openTag)) === $openTag) {
-                    $out = substr($trimmed, 0, -strlen($openTag));
+                # class) is closed and kept, even if empty. The whitespace after it goes too.
+                $last = $this->lastNonBlankPart($out);
+                if ($last !== null && preg_match('%^<[a-z0-9-]+\s*>$%i', $openTag)
+                    && (strcasecmp($out[$last], $openTag) === 0 || $out[$last] === "<{$elName}>")
+                ) {
+                    $this->dropPartsFrom($out, $last);
                 } else {
-                    $out .= "</{$elName}>";
+                    $out[] = "</{$elName}>";
                 }
             }
-            $out .= $string;
+            $out[] = $string;
 
             # [sc]<p></p> -> [sc]: closing tags directly after the shortcode (whitespace aside) are
             # consumed instead of reopening an element that would be left empty
             while ($chain) {
                 $next = $i + 1;
-                while ($next < $count && $tokens[$next][0] === 'text' && trim($tokens[$next][1]) === '') {
+                while ($next < $count && $kinds[$next] === 'text' && trim($strings[$next]) === '') {
                     $next++;
                 }
-                if ($next < $count && $tokens[$next][0] === 'tag' && $tokens[$next][2] === $chain[0][0]
-                    && strpos($tokens[$next][1], '</') === 0
+                if ($next < $count && $kinds[$next] === 'tag' && $names[$next] === $chain[0][0]
+                    && strpos($strings[$next], '</') === 0
                 ) {
-                    $this->trackTag($stack, $tokens[$next][1], $tokens[$next][2]);
+                    $this->trackTag($stack, $strings[$next], $names[$next]);
                     array_shift($chain);
                     $i = $next;
                     continue;
@@ -204,11 +231,42 @@ class ShortcodeParserExtension
             # a styled span carries on after the shortcode - minus their id (and a link's name
             # anchor), which must stay unique.
             foreach (array_reverse($chain) as [$elName, $openTag]) {
-                $out .= $this->isInline($elName) ? $this->withoutUniqueAttributes($openTag, $elName) : "<{$elName}>";
+                $out[] = $this->isInline($elName) ? $this->withoutUniqueAttributes($openTag, $elName) : "<{$elName}>";
             }
         }
 
-        return $out;
+        return implode('', $out);
+    }
+
+    /**
+     * Drop the output parts from this index to the end. array_pop() rather than array_splice(),
+     * which rebuilds the whole array and so would make every clean-up cost the full output size.
+     *
+     * @param string[] $out
+     * @param int $from
+     */
+    private function dropPartsFrom(array &$out, int $from): void
+    {
+        while (count($out) > $from) {
+            array_pop($out);
+        }
+    }
+
+    /**
+     * Index of the last output part that is not whitespace-only text, or null if there is none.
+     * Parts are whole tokens, so a tag is always a part of its own.
+     *
+     * @param string[] $out
+     * @return int|null
+     */
+    private function lastNonBlankPart(array $out): ?int
+    {
+        for ($p = count($out) - 1; $p >= 0; $p--) {
+            if (trim($out[$p]) !== '') {
+                return $p;
+            }
+        }
+        return null;
     }
 
     /**

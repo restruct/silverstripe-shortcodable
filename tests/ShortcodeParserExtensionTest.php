@@ -247,6 +247,29 @@ class ShortcodeParserExtensionTest extends SapphireTest
         $this->markTestIncomplete("Container parents: behaviour to be decided in issue #9, not asserted.\n" . implode("\n", $report));
     }
 
+    /**
+     * The tag walk must stay linear in the content size. Each input below took tens of seconds to
+     * minutes when every shortcode re-scanned or copied the output built so far (or the rest of the
+     * content), against milliseconds for the 5.1.0 regex. Only the extension's onBeforeParse hook is
+     * run, not the whole parse, so the DOM pass in ShortcodeParser does not dominate the timing. The
+     * limit is generous on purpose: it separates linear from quadratic, it does not benchmark.
+     */
+    public function testCloseParentStaysLinearOnLargeContent()
+    {
+        $cases = [
+            '60000 block shortcodes' => str_repeat('<p>a [sc_block] b</p>', 60000),
+            '60000 after a line break' => str_repeat("<p>a<br>\n [sc_block]\n</p>", 60000),
+            '20000 unterminated comments' => str_repeat('<!-- x ', 20000) . '<p>[sc_block]</p>',
+            '40000 shortcode openings without ]' => str_repeat('<p>[sc_block x</p>', 40000),
+        ];
+        foreach ($cases as $label => $content) {
+            $start = microtime(true);
+            ShortcodeParser::get()->extend('onBeforeParse', $content);
+            $seconds = microtime(true) - $start;
+            $this->assertLessThan(1.5, $seconds, sprintf('%s took %.1f s', $label, $seconds));
+        }
+    }
+
     public function testParserInstanceWithoutTheShortcodeRegisteredIsLeftAlone()
     {
         // A separate parser instance (like the 'regenerator' one) that does not know sc_block

@@ -202,6 +202,40 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 "<p><span class=\"c\" id='s1' data-id=\"1\">a [sc_block] b</span></p>",
                 "<p><span class=\"c\" id=\"s1\" data-id=\"1\">a </span></p>$b<p><span class=\"c\" data-id=\"1\"> b</span></p>",
             ],
+            // Tags inside a comment are not elements
+            'comment containing tags inside the parent' => [
+                '<p>a <!-- </p><div> --> [sc_block] b</p>',
+                "<p>a <!-- </p><div> --> </p>$b<p> b</p>",
+            ],
+            // Only closing tags are consumed after the shortcode, never an opening tag
+            'opening tag directly after' => [
+                '<p>[sc_block]<em>x</em></p>',
+                "$b<p><em>x</em></p>",
+            ],
+            // Element names are compared case-insensitively
+            'uppercase inline and block tags' => [
+                '<P>x <STRONG>b [sc_block] c</STRONG> y</P>',
+                "<p>x <strong>b </strong></p>$b<p><strong> c</strong> y</p>",
+            ],
+            // A self-closed non-void element (XHTML style) does not open, so it is not the parent
+            'self-closed span before' => [
+                '<p>a <span /> [sc_block] b</p>',
+                "<p>a <span /> </p>$b<p> b</p>",
+            ],
+            // Without a wrapping element nothing is cleaned up either: the <br> stays
+            'top level after a br' => [
+                'Line<br>[sc_block]',
+                "Line<br>$b",
+            ],
+            // A stray closing tag (nothing open by that name) leaves the open elements alone
+            'stray closing tag inside the parent' => [
+                '<p>a </span> [sc_block] b</p>',
+                "<p>a </span> </p>$b<p> b</p>",
+            ],
+            'opening tag of the same element directly after' => [
+                '<p><strong>a [sc_block]<strong>x</strong> b</strong></p>',
+                "<p><strong>a </strong></p>$b<p><strong><strong>x</strong> b</strong></p>",
+            ],
             // A tag that merely starts with the block tag's name is another shortcode
             'other shortcode sharing the prefix' => [
                 '<p>Some [sc_block_other] x</p>',

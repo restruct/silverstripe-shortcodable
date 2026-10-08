@@ -201,13 +201,25 @@ class ShortcodeParserExtension
 
             # Reopen what is still open, outermost first. The block element is reopened bare, as
             # before (an id must not be duplicated); inline ones keep their attributes, so a link or
-            # a styled span carries on after the shortcode.
+            # a styled span carries on after the shortcode - minus their id (and a link's name
+            # anchor), which must stay unique.
             foreach (array_reverse($chain) as [$elName, $openTag]) {
-                $out .= $this->isInline($elName) ? $openTag : "<{$elName}>";
+                $out .= $this->isInline($elName) ? $this->withoutUniqueAttributes($openTag, $elName) : "<{$elName}>";
             }
         }
 
         return $out;
+    }
+
+    /**
+     * An opening tag without its id attribute, and without name on a link (an anchor target), so
+     * a reopened copy of the element does not repeat them.
+     */
+    private function withoutUniqueAttributes(string $openTag, string $name): string
+    {
+        $attributes = $name === 'a' ? 'id|name' : 'id';
+        # Whitespace before the name, so data-id or aria-name are left alone; quoted or bare values
+        return preg_replace('%\s+(?:' . $attributes . ')\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>"\']+)%i', '', $openTag);
     }
 
     /**

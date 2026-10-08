@@ -193,6 +193,15 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<p><my-el>x [sc_block] y</my-el></p>',
                 "<p><my-el>x </my-el></p>$b<p><my-el> y</my-el></p>",
             ],
+            // A reopened inline element must not repeat an id (or a link's name anchor)
+            'link with id and name inside p' => [
+                '<p><a id="top" name="top" href="/x">see [sc_block] here</a></p>',
+                "<p><a id=\"top\" name=\"top\" href=\"/x\">see </a></p>$b<p><a href=\"/x\"> here</a></p>",
+            ],
+            'span with id inside p' => [
+                "<p><span class=\"c\" id='s1' data-id=\"1\">a [sc_block] b</span></p>",
+                "<p><span class=\"c\" id=\"s1\" data-id=\"1\">a </span></p>$b<p><span class=\"c\" data-id=\"1\"> b</span></p>",
+            ],
             // A tag that merely starts with the block tag's name is another shortcode
             'other shortcode sharing the prefix' => [
                 '<p>Some [sc_block_other] x</p>',

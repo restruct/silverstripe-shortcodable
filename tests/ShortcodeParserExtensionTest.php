@@ -182,6 +182,11 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<p>Intro</p>[sc_block]<p>Outro</p>',
                 "<p>Intro</p>$b<p>Outro</p>",
             ],
+            // ShortcodeParser also accepts a comma between the tag and its attributes
+            'comma-separated attributes' => [
+                '<p>Some [sc_block,id=1] x</p>',
+                "<p>Some </p>$b<p> x</p>",
+            ],
             // A tag that merely starts with the block tag's name is another shortcode
             'other shortcode sharing the prefix' => [
                 '<p>Some [sc_block_other] x</p>',

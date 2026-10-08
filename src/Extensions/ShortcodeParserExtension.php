@@ -106,11 +106,12 @@ class ShortcodeParserExtension
         }, $tags));
         # One pass over comments, HTML tags and block shortcodes, in document order. A shortcode inside
         # a tag's attribute is part of the tag match, so it is (rightly) never treated as an element.
-        # The tag name must end at whitespace, ']' or '/', so [sc_block_other] is not [sc_block].
+        # The tag name must end at whitespace, ']', '/' or ',' (ShortcodeParser's own tag regex accepts
+        # `[tag,attr=x]`), so [sc_block_other] is not [sc_block].
         # Enclosed content (`[sc]...[/sc]`) is matched as in the original regex: no '[' inside it.
         $pattern = '%(?<comment><!--.*?-->)'
             . '|(?<tag></?(?<name>[a-z][a-z0-9]*)\b[^>]*>)'
-            . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\]/])[^\]]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
+            . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
         if (!preg_match_all($pattern, $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
             return $content;
         }

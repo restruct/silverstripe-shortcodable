@@ -13,6 +13,11 @@
   `[sc_block_other]` was handled as `[sc_block]`. The content is now walked tag by tag. When the
   shortcode sits inside inline elements (`<strong>`, `<a>`), those are closed too, up to the block
   element holding them, and reopened after it with their attributes.
+  **Multi-line content:** 5.1.0 only looked within one line, so a parent on a line of its own
+  (`<p>\n[sc]\n</p>`) was left alone; it is now closed as well. For containers that can already hold
+  block content (`<td>`, `<li>`, `<blockquote>`, `<section>`) and for `<pre>`, this means they are now
+  closed and split too, where 5.1.0 left multi-line forms untouched. Whether they should be is open
+  in #9.
 
 ## 5.1.0 (2026-09-25)
 

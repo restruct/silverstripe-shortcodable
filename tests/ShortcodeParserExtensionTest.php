@@ -200,6 +200,33 @@ class ShortcodeParserExtensionTest extends SapphireTest
         $this->assertSame([], $failures, count($failures) . ' of ' . count($cases) . " cases failed:\n" . implode("\n", $failures));
     }
 
+    /**
+     * Issue #9 (open, waiting on a decision): which elements a block shortcode may close when its
+     * parent is a container that can already hold block content (td, li, blockquote, section) or
+     * pre. 5.1.0 only looked within one line, so these multi-line forms were left alone; the
+     * tag walk now closes/splits the container. No behaviour is asserted here on purpose: the
+     * inputs are kept so the #9 decision has its cases ready. Each one is parsed so the rows at
+     * least run, and the test is reported as incomplete.
+     */
+    public function testContainerParentsAwaitIssue9()
+    {
+        $cases = [
+            'table cell, multi-line' => "<table><tr>\n<td>\n[sc_block]\n</td>\n</tr></table>",
+            'list item, multi-line' => "<ul>\n<li>\n[sc_block]\n</li>\n</ul>",
+            'blockquote, multi-line' => "<blockquote>\n[sc_block]\n</blockquote>",
+            'section, multi-line' => "<section>\n[sc_block]\n</section>",
+            'pre, multi-line' => "<pre>\nline\n[sc_block]\n</pre>",
+            'table cell, one line' => '<table><tr><td>[sc_block]</td></tr></table>',
+            'list item, one line' => '<ul><li>One</li><li>[sc_block]</li></ul>',
+            'div, one line' => '<div>[sc_block]</div>',
+        ];
+        $report = [];
+        foreach ($cases as $label => $input) {
+            $report[] = sprintf("%s\n    input:  %s\n    output: %s", $label, json_encode($input), json_encode(ShortcodeParser::get()->parse($input)));
+        }
+        $this->markTestIncomplete("Container parents: behaviour to be decided in issue #9, not asserted.\n" . implode("\n", $report));
+    }
+
     public function testParserInstanceWithoutTheShortcodeRegisteredIsLeftAlone()
     {
         // A separate parser instance (like the 'regenerator' one) that does not know sc_block

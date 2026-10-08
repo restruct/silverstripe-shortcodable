@@ -7,6 +7,7 @@ use Shortcodable\Tests\Stub\BlockShortcode;
 use Shortcodable\Tests\Stub\SimpleShortcode;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Dev\SapphireTest;
+use SilverStripe\View\Parsers\HTMLValue;
 use SilverStripe\View\Parsers\ShortcodeParser;
 
 /**
@@ -59,6 +60,144 @@ class ShortcodeParserExtensionTest extends SapphireTest
             '<p>Some SIMPLE[] content</p>',
             ShortcodeParser::get()->parse('<p>Some [sc_simple] content</p>')
         );
+    }
+
+    /**
+     * Issue #8: the element closed and reopened must be the shortcode's own wrapping element, whatever
+     * precedes or surrounds it. Each case is input => expected output ('B' stands for the block stub's
+     * rendered output). All cases run and every mismatch is reported together, so a failure shows the
+     * whole table rather than the first broken row (no @dataProvider: see the compatibility note).
+     *
+     * The comparison is structural: ShortcodeParser::parse() itself loads the content into a DOM
+     * (HTMLValue, an HTML5 parser that repairs misnested markup the way a browser does) and returns
+     * that DOM serialised, so the expected markup is put through the same parser. A wrong element
+     * closed by the extension shows up as a different tree (a stray <h3></h3>, a block left inside
+     * a <p>), not as a formatting difference.
+     */
+    public function testCloseParentClosesTheShortcodesOwnWrappingElement()
+    {
+        $b = '<div class="block">B</div>';
+        $cases = [
+            // The case from the issue: an earlier sibling block must not be taken as the parent
+            'heading and paragraph before' => [
+                '<h3>Address</h3><p>Street 1</p><p>[sc_block]</p>',
+                "<h3>Address</h3><p>Street 1</p>$b",
+            ],
+            'heading before, text around' => [
+                '<h2>Title</h2><p>Some [sc_block] content</p>',
+                "<h2>Title</h2><p>Some </p>$b<p> content</p>",
+            ],
+            'sibling after' => [
+                '<p>Some [sc_block] content</p><h3>Next</h3>',
+                "<p>Some </p>$b<p> content</p><h3>Next</h3>",
+            ],
+            'siblings on separate lines' => [
+                "<h3>A</h3>\n<p>[sc_block]</p>\n<p>after</p>",
+                "<h3>A</h3>\n$b\n<p>after</p>",
+            ],
+            // Only the direct block parent is closed, not an outer container
+            'nested in a div' => [
+                '<div class="wrap"><p>Some [sc_block] content</p></div>',
+                "<div class=\"wrap\"><p>Some </p>$b<p> content</p></div>",
+            ],
+            'heading as parent' => [
+                '<h2>Title [sc_block]</h2>',
+                "<h2>Title </h2>$b",
+            ],
+            // Inline parents are closed up to and including the block element that holds them, and
+            // reopened with their own attributes so a link or class carries on after the shortcode
+            'inside strong inside p' => [
+                '<p>Some <strong>bold [sc_block] text</strong> end</p>',
+                "<p>Some <strong>bold </strong></p>$b<p><strong> text</strong> end</p>",
+            ],
+            'inside a link inside p' => [
+                '<p><a href="/x">see [sc_block] here</a></p>',
+                "<p><a href=\"/x\">see </a></p>$b<p><a href=\"/x\"> here</a></p>",
+            ],
+            'only child of strong inside p' => [
+                '<p><strong>[sc_block]</strong></p>',
+                $b,
+            ],
+            'first child of a paragraph with attributes' => [
+                '<p class="lead" id="intro">[sc_block] after</p>',
+                "<p class=\"lead\" id=\"intro\"></p>$b<p> after</p>",
+            ],
+            // Several block shortcodes in one parent: each one closes the (reopened) parent
+            'two in one paragraph' => [
+                '<p>A [sc_block] B [sc_block] C</p>',
+                "<p>A </p>$b<p> B </p>$b<p> C</p>",
+            ],
+            'two adjacent' => [
+                '<p>[sc_block][sc_block]</p>',
+                "$b$b",
+            ],
+            'inline shortcode before a block one' => [
+                '<p>[sc_simple] and [sc_block]</p>',
+                '<p>SIMPLE[] and </p>' . $b,
+            ],
+            // First/last child: no empty parent element may be left on that side
+            'first child' => [
+                '<p>[sc_block] content</p>',
+                "$b<p> content</p>",
+            ],
+            'last child' => [
+                '<p>Some [sc_block]</p>',
+                "<p>Some </p>$b",
+            ],
+            'only child with whitespace around' => [
+                "<p>\n[sc_block]\n</p>",
+                $b,
+            ],
+            // Void elements are never taken as the parent; a trailing <br> is dropped as before
+            'br directly before' => [
+                '<p>Line<br>[sc_block]</p>',
+                "<p>Line</p>$b",
+            ],
+            'self-closed br earlier in the paragraph' => [
+                '<p>Line<br />text [sc_block] end</p>',
+                "<p>Line<br />text </p>$b<p> end</p>",
+            ],
+            'img before in the same paragraph' => [
+                '<p><img src="/a.png" alt=""> [sc_block] end</p>',
+                "<p><img src=\"/a.png\" alt=\"\"> </p>$b<p> end</p>",
+            ],
+            'hr sibling before' => [
+                '<hr><p>[sc_block]</p>',
+                "<hr>$b",
+            ],
+            'comment containing a tag before' => [
+                '<!-- <h3> --><p>[sc_block]</p>',
+                "<!-- <h3> -->$b",
+            ],
+            'uppercase tags' => [
+                '<P>Some [sc_block] x</P>',
+                "<P>Some </P>$b<P> x</P>",
+            ],
+            'enclosing shortcode with content' => [
+                '<p>Before [sc_block]inner[/sc_block] after</p>',
+                "<p>Before </p>$b<p> after</p>",
+            ],
+            // A shortcode with no wrapping element has nothing to close
+            'top level, between paragraphs' => [
+                '<p>Intro</p>[sc_block]<p>Outro</p>',
+                "<p>Intro</p>$b<p>Outro</p>",
+            ],
+            // A tag that merely starts with the block tag's name is another shortcode
+            'other shortcode sharing the prefix' => [
+                '<p>Some [sc_block_other] x</p>',
+                '<p>Some [sc_block_other] x</p>',
+            ],
+        ];
+
+        $failures = [];
+        foreach ($cases as $label => [$input, $expected]) {
+            $actual = ShortcodeParser::get()->parse($input);
+            $expected = HTMLValue::create($expected)->getContent();
+            if ($actual !== $expected) {
+                $failures[] = sprintf("%s\n    input:    %s\n    expected: %s\n    actual:   %s", $label, json_encode($input), json_encode($expected), json_encode($actual));
+            }
+        }
+        $this->assertSame([], $failures, count($failures) . ' of ' . count($cases) . " cases failed:\n" . implode("\n", $failures));
     }
 
     public function testParserInstanceWithoutTheShortcodeRegisteredIsLeftAlone()

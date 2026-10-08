@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.1.1 (unreleased)
+
+### Fixed
+
+- **`shortcode_close_parent` closes the shortcode's own wrapping element** (#8). It closed the first
+  element it could find earlier on the same line instead, so `<h3>Address</h3><p>[sc]</p>` came out
+  as `<p></h3>[sc]<h3></p>`, which browsers repair into a stray empty `<h3>` with the `<p>` left open.
+  Also wrong before: an outer `<div>` was closed instead of the `<p>` inside it, a `<hr>` or a tag
+  inside an HTML comment could be taken as the parent, a second block shortcode in the same
+  paragraph was left inside it, a shortcode outside any element got a stray empty `<p>`, and
+  `[sc_block_other]` was handled as `[sc_block]`. The content is now walked tag by tag. When the
+  shortcode sits inside inline elements (`<strong>`, `<a>`), those are closed too, up to the block
+  element holding them, and reopened after it with their attributes.
+
 ## 5.1.0 (2026-09-25)
 
 **One line for Silverstripe 5 and 6.** `main` now declares `silverstripe/framework ^5 || ^6` on PHP

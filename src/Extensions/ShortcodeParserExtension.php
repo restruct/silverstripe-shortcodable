@@ -109,8 +109,10 @@ class ShortcodeParserExtension
         # The tag name must end at whitespace, ']', '/' or ',' (ShortcodeParser's own tag regex accepts
         # `[tag,attr=x]`), so [sc_block_other] is not [sc_block].
         # Enclosed content (`[sc]...[/sc]`) is matched as in the original regex: no '[' inside it.
+        # Element names may contain hyphens (custom elements, eg <my-el>), so the name runs on to
+        # whitespace, '/' or '>' rather than to a word boundary, which would cut it at the hyphen.
         $pattern = '%(?<comment><!--.*?-->)'
-            . '|(?<tag></?(?<name>[a-z][a-z0-9]*)\b[^>]*>)'
+            . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])[^>]*>)'
             . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
         if (!preg_match_all($pattern, $content, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)) {
             return $content;
@@ -159,7 +161,7 @@ class ShortcodeParserExtension
             $chain = [];
             for ($s = count($stack) - 1; $s >= 0; $s--) {
                 $chain[] = $stack[$s];
-                if (!in_array($stack[$s][0], self::INLINE_ELEMENTS)) {
+                if (!$this->isInline($stack[$s][0])) {
                     break;
                 }
             }
@@ -201,11 +203,20 @@ class ShortcodeParserExtension
             # before (an id must not be duplicated); inline ones keep their attributes, so a link or
             # a styled span carries on after the shortcode.
             foreach (array_reverse($chain) as [$elName, $openTag]) {
-                $out .= in_array($elName, self::INLINE_ELEMENTS) ? $openTag : "<{$elName}>";
+                $out .= $this->isInline($elName) ? $openTag : "<{$elName}>";
             }
         }
 
         return $out;
+    }
+
+    /**
+     * Whether an element is inline (phrasing) content. Custom elements (a hyphen in the name) are
+     * phrasing content in HTML, so they count as inline too.
+     */
+    private function isInline(string $name): bool
+    {
+        return in_array($name, self::INLINE_ELEMENTS) || strpos($name, '-') !== false;
     }
 
     /**

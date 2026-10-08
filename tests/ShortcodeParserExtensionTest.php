@@ -187,6 +187,12 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<p>Some [sc_block,id=1] x</p>',
                 "<p>Some </p>$b<p> x</p>",
             ],
+            // A custom element's name includes hyphens; custom elements are phrasing content, so
+            // they are closed like the inline elements, up to the block element holding them
+            'custom element inside p' => [
+                '<p><my-el>x [sc_block] y</my-el></p>',
+                "<p><my-el>x </my-el></p>$b<p><my-el> y</my-el></p>",
+            ],
             // A tag that merely starts with the block tag's name is another shortcode
             'other shortcode sharing the prefix' => [
                 '<p>Some [sc_block_other] x</p>',

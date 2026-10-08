@@ -18,6 +18,9 @@
   block content (`<td>`, `<li>`, `<blockquote>`, `<section>`) and for `<pre>`, this means they are now
   closed and split too, where 5.1.0 left multi-line forms untouched. Whether they should be is open
   in #9.
+  Also handled: comma-separated shortcode attributes (`[sc,id=1]`), custom elements with a hyphen
+  in their name (`<my-el>`, treated as inline), and a reopened inline element no longer repeats its
+  `id` (or a link's `name`). The pass is linear in the content size.
 
 ## 5.1.0 (2026-09-25)
 

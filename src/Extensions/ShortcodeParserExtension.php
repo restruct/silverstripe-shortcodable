@@ -128,6 +128,12 @@ class ShortcodeParserExtension
         $tagAlternation = implode('|', array_map(function ($tag) {
             return preg_quote($tag, '%');
         }, $tags));
+        # Most content has no block shortcode at all. One cheap search for any of the tags skips the
+        # tokenising below, which on a 3 MB page without one took ~45 MB of memory (5.1.0's single
+        # regex needed ~5 MB). The lookahead is the same tag ending as in the full pattern.
+        if (!preg_match('%\[(?:' . $tagAlternation . ')(?=[\s\],/])%i', $content)) {
+            return $content;
+        }
         # One pass over comments, HTML tags and block shortcodes, in document order. A shortcode inside
         # a tag's attribute is part of the tag match, so it is (rightly) never treated as an element.
         # The tag name must end at whitespace, ']', '/' or ',' (ShortcodeParser's own tag regex accepts

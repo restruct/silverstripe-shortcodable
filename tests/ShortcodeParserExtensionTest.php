@@ -409,6 +409,26 @@ class ShortcodeParserExtensionTest extends SapphireTest
     }
 
     /**
+     * Content without any block shortcode is returned without being tokenised. The token lists for
+     * a ~3 MB page cost ~45 MB of memory, on every render, for nothing. Measured with
+     * memory_reset_peak_usage(), which needs PHP 8.2, so the test is skipped on PHP 8.1.
+     */
+    public function testContentWithoutBlockShortcodeIsNotTokenised()
+    {
+        if (!function_exists('memory_reset_peak_usage')) {
+            $this->markTestSkipped('memory_reset_peak_usage() needs PHP 8.2+');
+        }
+        $content = str_repeat("<h3>Heading</h3>\n<p>Some text <strong>bold</strong> and <a href=\"/x\">link</a> [sc_simple] more.</p>\n", 30000);
+        $input = $content;
+        $before = memory_get_usage();
+        memory_reset_peak_usage();
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $extra = memory_get_peak_usage() - $before;
+        $this->assertSame($input, $content);
+        $this->assertLessThan(8 * 1024 * 1024, $extra, sprintf('used %.1f MB on a %.1f MB page', $extra / 1048576, strlen($input) / 1048576));
+    }
+
+    /**
      * Inline ancestors are closed and reopened up to MAX_INLINE_DEPTH (10) levels; deeper than that
      * the shortcode is left in place. Without the cap every shortcode closed and reopened every
      * level, so the output grew with depth x shortcodes (400 levels and 400 shortcodes: 11 KB in,

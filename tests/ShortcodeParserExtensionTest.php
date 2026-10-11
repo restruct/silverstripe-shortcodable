@@ -431,6 +431,30 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 str_repeat('<div>', $n) . str_repeat('</b>', $n) . '<p>[sc_block]</p>',
                 str_repeat('<div>', $n) . str_repeat('</b>', $n) . '[sc_block]',
             ],
+            // Tags that never close: each '<a ...' is text (a raw '<' ends the attempt), so the
+            // shortcode's <p> is closed as usual. When '<' was allowed inside a tag, every one of
+            // these scanned on to the end of the content (80000 '<a href="x ': 24.8 s)
+            '20000 unclosed <a href="x ' => [
+                str_repeat('<a href="x ', 20000) . '<p>[sc_block]</p>',
+                str_repeat('<a href="x ', 20000) . '[sc_block]',
+            ],
+            "20000 unclosed <a '" => [
+                str_repeat("<a '", 20000) . '<p>[sc_block]</p>',
+                str_repeat("<a '", 20000) . '[sc_block]',
+            ],
+            '20000 unclosed <a "' => [
+                str_repeat('<a "', 20000) . '<p>[sc_block]</p>',
+                str_repeat('<a "', 20000) . '[sc_block]',
+            ],
+            // No '>' anywhere after them: the slow shape itself, so the time limit is the guard
+            '60000 unclosed <a href="x , no > at all' => [
+                str_repeat('<a href="x ', 60000) . '[sc_block]',
+                str_repeat('<a href="x ', 60000) . '[sc_block]',
+            ],
+            '20000 unclosed <a ' => [
+                str_repeat('<a ', 20000) . '<p>[sc_block]</p>',
+                str_repeat('<a ', 20000) . '[sc_block]',
+            ],
             // Past MAX_INLINE_DEPTH nothing is closed or reopened (see testInlineDepthIsCapped);
             // without the cap the output was 59 MB
             '1600 nested spans, 1600 shortcodes' => [

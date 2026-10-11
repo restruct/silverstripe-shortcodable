@@ -156,9 +156,13 @@ class ShortcodeParserExtension
         # A tag runs to the first '>' outside a quoted attribute value: `<a title="a>b">` is one tag.
         # Stopping at the first '>' (as `[^>]*>` did) cut it at `a>` and pulled the text after the
         # tag into the reopened copy. The quantifiers are possessive so an unterminated quote fails
-        # the tag at once (it is then text) instead of backtracking, which keeps the scan linear.
+        # the tag at once (it is then text) instead of backtracking. A raw '<' is allowed neither in
+        # the unquoted run nor in a quoted value: without that, every '<a href="x ' of a long run of
+        # tags that never close scanned on to the end of the content (80000 of them: 24.8 s), and
+        # the scan is linear again. A tag with a raw '<' in a value is plain text, as in 5.1.0
+        # (HTMLValue writes such a '<' as &lt; anyway).
         $pattern = '%(?<comment><!--.*?(?:-->|$))'
-            . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>)'
+            . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])(?:[^<>"\']++|"[^"<]*+"|\'[^\'<]*+\')*+>)'
             . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]\[]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
         # Tokenise: text between the matches, plus each match with its kind. One match at a time
         # (preg_match from an offset, not preg_match_all) and kept as three flat lists rather than an

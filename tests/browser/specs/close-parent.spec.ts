@@ -17,6 +17,13 @@ const cases: [string, string, string][] = [
     ['two in one paragraph', '<p>A [scb_block] B [scb_block] C</p>', `<p>A </p>${B}<p> B </p>${B}<p> C</p>`],
     ['hr sibling before', '<hr><p>[scb_block]</p>', `<hr>${B}`],
     ['top level, between paragraphs', '<p>Intro</p>[scb_block]<p>Outro</p>', `<p>Intro</p>${B}<p>Outro</p>`],
+    // Issue #9 (b): a container that can hold block content is left whole, on one line or several;
+    // only p, h1-h6, pre, address, dt and summary (plus inline ancestors) are closed
+    ['list item, multi-line (#9)', '<ul>\n<li>\n[scb_block]\n</li>\n</ul>', `<ul>\n<li>\n${B}\n</li>\n</ul>`],
+    ['table cell, one line (#9)', '<table><tr><td>[scb_block]</td></tr></table>', `<table><tr><td>${B}</td></tr></table>`],
+    ['div, one line (#9)', '<div>[scb_block]</div>', `<div>${B}</div>`],
+    ['strong inside a list item (#9)', '<ul><li><strong>a [scb_block] b</strong></li></ul>', `<ul><li><strong>a </strong>${B}<strong> b</strong></li></ul>`],
+    ['pre is closed (#9)', '<pre>line\n[scb_block]\n</pre>', `<pre>line\n</pre>${B}`],
     ['inline shortcode stays inline', '<h3>Year</h3><p>It is [scb_year] now</p>', '<h3>Year</h3><p>It is 2026 now</p>'],
 ];
 

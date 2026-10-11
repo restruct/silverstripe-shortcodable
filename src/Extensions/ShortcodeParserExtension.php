@@ -86,12 +86,24 @@ class ShortcodeParserExtension
     ];
 
     /**
+     * Block elements a block shortcode closes: those whose content model is phrasing content only,
+     * so block output cannot stay inside them (issue #9, option b). Every other block element - div,
+     * li, td, th, dd, blockquote, section, article, figure and the like - can already hold block
+     * content, so a shortcode directly inside one is left in place and the element is not split.
+     */
+    private const CLOSABLE_ELEMENTS = [
+        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'address', 'dt', 'summary',
+    ];
+
+    /**
      * Close the element(s) wrapping each block shortcode before it and reopen them after it, eg
      * `<p>Some [sc] content</p>` becomes `<p>Some </p>[sc]<p> content</p>`.
      *
      * The content is walked tag by tag with a stack of open elements, so the element closed is the
      * shortcode's own parent. If that parent is inline (<strong>, <a>), the inline elements are closed
-     * up to and including the block element holding them. An element without attributes that would be
+     * up to and including the block element holding them. Only block elements that cannot hold block
+     * content are closed (CLOSABLE_ELEMENTS: <p>, headings, <pre>, ...); a container such as <div>,
+     * <li> or <td> is left whole, and only inline elements inside it are closed. An element without attributes that would be
      * left empty on either side is dropped rather than closed/reopened, as is a <br> directly before
      * the shortcode.
      *
@@ -179,13 +191,26 @@ class ShortcodeParserExtension
                 continue;
             }
 
-            # The elements to close, innermost first: inline ancestors up to the first block one
+            # The elements to close, innermost first: inline ancestors up to the first block one, and
+            # that block one only if it cannot hold block content (CLOSABLE_ELEMENTS). A container
+            # (<div>, <li>, <td>, <blockquote>, ...) stops the walk without being closed: splitting it
+            # would break the list or table around it (issue #9).
             $chain = [];
             for ($s = count($stack) - 1; $s >= 0; $s--) {
-                $chain[] = $stack[$s];
-                if (!$this->isInline($stack[$s][0])) {
-                    break;
+                if ($this->isInline($stack[$s][0])) {
+                    $chain[] = $stack[$s];
+                    continue;
                 }
+                if (in_array($stack[$s][0], self::CLOSABLE_ELEMENTS)) {
+                    $chain[] = $stack[$s];
+                }
+                break;
+            }
+            if (!$chain) {
+                # Directly inside a container: nothing to close, so nothing to clean up either (a <br>
+                # before the shortcode stays, as it does at the top level)
+                $out[] = $string;
+                continue;
             }
 
             # <br></p>[sc] -> </p>[sc] (a line break right before block output only adds a blank line)

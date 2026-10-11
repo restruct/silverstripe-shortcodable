@@ -112,6 +112,13 @@ If the shortcode sits inside inline elements (eg `<p><strong>Some [shortcode]</s
 as well, up to the block element holding them, and reopened after the shortcode. A bare element (no attributes)
 that would be left empty on either side is dropped instead.
 
+Only elements that cannot hold block content are closed: `<p>`, `<h1>`-`<h6>`, `<pre>`, `<address>`, `<dt>` and
+`<summary>` (plus inline elements). Containers that can already hold block content, such as `<div>`, `<li>`, `<td>`,
+`<dd>`, `<blockquote>` and `<section>`, are left whole: `<li>[shortcode]</li>` stays a list item with the shortcode
+output inside it. Inline elements inside such a container are still closed and reopened around the shortcode.
+Up to 5.1.0 a container on the same line was closed too, so `<div>[shortcode]</div>` lost its `<div>`; since 5.1.1
+it is kept.
+
 
 ## Shortcode placeholder images
 To display a nice image instead of the raw shortcode in the CMS editor, implement a getShortcodePlaceHolder method on your shortcodable object:

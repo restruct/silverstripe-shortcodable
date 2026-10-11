@@ -255,30 +255,110 @@ class ShortcodeParserExtensionTest extends SapphireTest
     }
 
     /**
-     * Issue #9 (open, waiting on a decision): which elements a block shortcode may close when its
-     * parent is a container that can already hold block content (td, li, blockquote, section) or
-     * pre. 5.1.0 only looked within one line, so these multi-line forms were left alone; the
-     * tag walk now closes/splits the container. No behaviour is asserted here on purpose: the
-     * inputs are kept so the #9 decision has its cases ready. Each one is parsed so the rows at
-     * least run, and the test is reported as incomplete.
+     * Issue #9, option (b): a block shortcode closes only block elements that cannot hold block
+     * content (p, h1-h6, pre, address, dt, summary) plus inline ancestors. A container that can
+     * already hold block content (div, li, td, blockquote, section, ...) is left whole, on one line
+     * or several: splitting it would delete or break the list item, table cell or quote around it.
+     * Input => expected output, compared structurally as in the #8 table above.
      */
-    public function testContainerParentsAwaitIssue9()
+    public function testContainerParentsAreLeftWhole()
     {
+        $b = '<div class="block">B</div>';
         $cases = [
-            'table cell, multi-line' => "<table><tr>\n<td>\n[sc_block]\n</td>\n</tr></table>",
-            'list item, multi-line' => "<ul>\n<li>\n[sc_block]\n</li>\n</ul>",
-            'blockquote, multi-line' => "<blockquote>\n[sc_block]\n</blockquote>",
-            'section, multi-line' => "<section>\n[sc_block]\n</section>",
-            'pre, multi-line' => "<pre>\nline\n[sc_block]\n</pre>",
-            'table cell, one line' => '<table><tr><td>[sc_block]</td></tr></table>',
-            'list item, one line' => '<ul><li>One</li><li>[sc_block]</li></ul>',
-            'div, one line' => '<div>[sc_block]</div>',
+            // Containers, multi-line: 5.1.0 left these alone (it only looked within one line)
+            'table cell, multi-line' => [
+                "<table><tr>\n<td>\n[sc_block]\n</td>\n</tr></table>",
+                "<table><tr>\n<td>\n$b\n</td>\n</tr></table>",
+            ],
+            'list item, multi-line' => [
+                "<ul>\n<li>\n[sc_block]\n</li>\n</ul>",
+                "<ul>\n<li>\n$b\n</li>\n</ul>",
+            ],
+            'blockquote, multi-line' => [
+                "<blockquote>\n[sc_block]\n</blockquote>",
+                "<blockquote>\n$b\n</blockquote>",
+            ],
+            'section, multi-line' => [
+                "<section>\n[sc_block]\n</section>",
+                "<section>\n$b\n</section>",
+            ],
+            // Containers, one line: 5.1.0 closed these (and dropped the emptied element); now left whole
+            'table cell, one line' => [
+                '<table><tr><td>[sc_block]</td></tr></table>',
+                "<table><tr><td>$b</td></tr></table>",
+            ],
+            'list item, one line' => [
+                '<ul><li>One</li><li>[sc_block]</li></ul>',
+                "<ul><li>One</li><li>$b</li></ul>",
+            ],
+            'div, one line' => [
+                '<div>[sc_block]</div>',
+                "<div>$b</div>",
+            ],
+            'list item with text around' => [
+                '<ul><li>One [sc_block] two</li></ul>',
+                "<ul><li>One $b two</li></ul>",
+            ],
+            'definition description' => [
+                '<dl><dt>T</dt><dd>x [sc_block] y</dd></dl>',
+                "<dl><dt>T</dt><dd>x $b y</dd></dl>",
+            ],
+            // A <br> before the shortcode stays when nothing is closed, as at the top level
+            'br before, inside a div' => [
+                '<div>Line<br>[sc_block]</div>',
+                "<div>Line<br>$b</div>",
+            ],
+            // Inline ancestors inside a container are still closed and reopened, the container is not
+            'strong inside a list item' => [
+                '<ul><li><strong>a [sc_block] b</strong></li></ul>',
+                "<ul><li><strong>a </strong>$b<strong> b</strong></li></ul>",
+            ],
+            'only child of a bare em inside a table cell' => [
+                '<table><tr><td><em>[sc_block]</em></td></tr></table>',
+                "<table><tr><td>$b</td></tr></table>",
+            ],
+            // An inline element with attributes is closed and kept even if left empty, as in a <p>
+            'only child of a link inside a table cell' => [
+                '<table><tr><td><a href="/x">[sc_block]</a></td></tr></table>',
+                "<table><tr><td><a href=\"/x\"></a>$b</td></tr></table>",
+            ],
+            // A closable element inside a container: only that element is closed
+            'paragraph inside a list item' => [
+                '<ul><li><p>x [sc_block] y</p></li></ul>',
+                "<ul><li><p>x </p>$b<p> y</p></li></ul>",
+            ],
+            // The closable elements besides p and h1-h6 (those are in the #8 table)
+            'pre, multi-line' => [
+                "<pre>\nline\n[sc_block]\n</pre>",
+                "<pre>\nline\n</pre>$b",
+            ],
+            'h4' => [
+                '<h4>Title [sc_block]</h4>',
+                "<h4>Title </h4>$b",
+            ],
+            'address' => [
+                '<address>Street [sc_block] 1</address>',
+                "<address>Street </address>$b<address> 1</address>",
+            ],
+            'definition term' => [
+                '<dl><dt>Term [sc_block]</dt><dd>x</dd></dl>',
+                "<dl><dt>Term </dt>$b<dd>x</dd></dl>",
+            ],
+            'summary' => [
+                '<details><summary>S [sc_block]</summary>body</details>',
+                "<details><summary>S </summary>{$b}body</details>",
+            ],
         ];
-        $report = [];
-        foreach ($cases as $label => $input) {
-            $report[] = sprintf("%s\n    input:  %s\n    output: %s", $label, json_encode($input), json_encode(ShortcodeParser::get()->parse($input)));
+
+        $failures = [];
+        foreach ($cases as $label => [$input, $expected]) {
+            $actual = ShortcodeParser::get()->parse($input);
+            $expected = HTMLValue::create($expected)->getContent();
+            if ($actual !== $expected) {
+                $failures[] = sprintf("%s\n    input:    %s\n    expected: %s\n    actual:   %s", $label, json_encode($input), json_encode($expected), json_encode($actual));
+            }
         }
-        $this->markTestIncomplete("Container parents: behaviour to be decided in issue #9, not asserted.\n" . implode("\n", $report));
+        $this->assertSame([], $failures, count($failures) . ' of ' . count($cases) . " cases failed:\n" . implode("\n", $failures));
     }
 
     /**

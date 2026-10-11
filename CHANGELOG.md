@@ -1,6 +1,20 @@
 # Changelog
 
-## 5.1.1 (unreleased)
+## 5.1.1 (2026-10-11)
+
+### Changed
+
+- **`shortcode_close_parent` only closes elements that cannot hold block content** (#9). A block
+  shortcode now closes `<p>`, `<h1>`-`<h6>`, `<pre>`, `<address>`, `<dt>` and `<summary>`, plus any
+  inline elements (`<strong>`, `<a>`) between it and that element. Containers that can already hold
+  block content (`<div>`, `<li>`, `<td>`, `<th>`, `<dd>`, `<blockquote>`, `<section>`, `<article>`,
+  `<figure>` and the like) are left whole, so a shortcode in a list item or table cell no longer
+  breaks the list or table. Inline elements inside such a container are still closed and reopened
+  around the shortcode.
+  **Behaviour change:** 5.1.0 closed a container when it was on the same line as the shortcode, so
+  `<div>[sc]</div>` came out as just the shortcode output, without the `<div>`. It now stays
+  `<div>[sc output]</div>`; the same goes for `<li>[sc]</li>` and `<td>[sc]</td>`. Content that
+  relied on the wrapping `<div>` being removed needs the shortcode moved out of it.
 
 ### Fixed
 
@@ -13,14 +27,13 @@
   `[sc_block_other]` was handled as `[sc_block]`. The content is now walked tag by tag. When the
   shortcode sits inside inline elements (`<strong>`, `<a>`), those are closed too, up to the block
   element holding them, and reopened after it with their attributes.
-  **Multi-line content:** 5.1.0 only looked within one line, so a parent on a line of its own
-  (`<p>\n[sc]\n</p>`) was left alone; it is now closed as well. For containers that can already hold
-  block content (`<td>`, `<li>`, `<blockquote>`, `<section>`) and for `<pre>`, this means they are now
-  closed and split too, where 5.1.0 left multi-line forms untouched. Whether they should be is open
-  in #9.
-  Also handled: comma-separated shortcode attributes (`[sc,id=1]`), custom elements with a hyphen
-  in their name (`<my-el>`, treated as inline), and a reopened inline element no longer repeats its
-  `id` (or a link's `name`). The pass is linear in the content size.
+  **Multi-line content:** 5.1.0 only looked within one line, so a paragraph or heading on a line of
+  its own (`<p>\n[sc]\n</p>`) was left alone; it is now closed as well. Containers are not, on any
+  number of lines (see Changed above).
+  The walk also covers what the 5.1.0 regex got right or did not need: comma-separated shortcode
+  attributes (`[sc,id=1]`), custom elements with a hyphen in their name (`<my-el>`, read whole and
+  treated as inline), reopened inline elements without their `id` (or a link's `name`), so an
+  anchor is not repeated, and a pass that stays linear in the content size.
 
 ## 5.1.0 (2026-09-25)
 

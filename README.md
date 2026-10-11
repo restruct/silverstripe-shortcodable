@@ -116,6 +116,7 @@ Only elements that cannot hold block content are closed: `<p>`, `<h1>`-`<h6>`, `
 inline elements). Containers that can already hold block content, such as `<div>`, `<li>`, `<td>`, `<dt>`, `<dd>`,
 `<address>`, `<blockquote>` and `<section>`, are left whole: `<li>[shortcode]</li>` stays a list item with the shortcode
 output inside it. Inline elements inside such a container are still closed and reopened around the shortcode.
+A shortcode nested inside more than 10 inline elements is left untouched (a guard against pathological markup).
 Up to 5.1.0 a container on the same line was closed too, so `<div>[shortcode]</div>` lost its `<div>`; since 5.1.1
 it is kept.
 

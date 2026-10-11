@@ -99,6 +99,15 @@ class ShortcodeParserExtension
     ];
 
     /**
+     * The most inline ancestors (<strong>, <a>, <span>, ...) closed and reopened around one block
+     * shortcode. Past this depth the shortcode is left where it is, untouched, as for a container:
+     * real content never nests this deep, and closing and reopening every level for every shortcode
+     * made the output grow with depth x shortcodes (1600 nested spans and 1600 shortcodes gave
+     * 59 MB from 43 KB).
+     */
+    private const MAX_INLINE_DEPTH = 10;
+
+    /**
      * Close the element(s) wrapping each block shortcode before it and reopen them after it, eg
      * `<p>Some [sc] content</p>` becomes `<p>Some </p>[sc]<p> content</p>`.
      *
@@ -181,6 +190,10 @@ class ShortcodeParserExtension
         $out = [];
         # Open elements, outermost first: [name, original opening tag]
         $stack = [];
+        # How many elements of each name are open, so a stray closing tag (none of that name open)
+        # is ignored without scanning the whole stack: that scan made many stray closers inside
+        # deep nesting quadratic
+        $openCounts = [];
         $count = count($kinds);
         for ($i = 0; $i < $count; $i++) {
             $kind = $kinds[$i];
@@ -189,7 +202,7 @@ class ShortcodeParserExtension
 
             if ($kind === 'tag') {
                 $out[] = $string;
-                $this->trackTag($stack, $string, $name);
+                $this->trackTag($stack, $openCounts, $string, $name);
                 continue;
             }
             if ($kind !== 'sc' || !$stack) {
@@ -202,9 +215,14 @@ class ShortcodeParserExtension
             # that block one only if it cannot hold block content (CLOSABLE_ELEMENTS). A container
             # (<div>, <li>, <td>, <blockquote>, ...) stops the walk without being closed: splitting it
             # would break the list or table around it (issue #9).
+            # More than MAX_INLINE_DEPTH inline ancestors: leave the shortcode in place (see there).
             $chain = [];
             for ($s = count($stack) - 1; $s >= 0; $s--) {
                 if ($this->isInline($stack[$s][0])) {
+                    if (count($chain) >= self::MAX_INLINE_DEPTH) {
+                        $chain = [];
+                        break;
+                    }
                     $chain[] = $stack[$s];
                     continue;
                 }
@@ -250,7 +268,7 @@ class ShortcodeParserExtension
                 if ($next < $count && $kinds[$next] === 'tag' && $names[$next] === $chain[0][0]
                     && strpos($strings[$next], '</') === 0
                 ) {
-                    $this->trackTag($stack, $strings[$next], $names[$next]);
+                    $this->trackTag($stack, $openCounts, $strings[$next], $names[$next]);
                     array_shift($chain);
                     $i = $next;
                     continue;
@@ -336,16 +354,23 @@ class ShortcodeParserExtension
      * Update the open-element stack for one tag.
      *
      * @param array $stack open elements, outermost first: [name, original opening tag]
+     * @param int[] $openCounts number of open elements per name, kept in step with $stack
      * @param string $tag the tag as written
      * @param string $name its lowercased element name
      */
-    private function trackTag(array &$stack, string $tag, string $name): void
+    private function trackTag(array &$stack, array &$openCounts, string $tag, string $name): void
     {
         if (strpos($tag, '</') === 0) {
-            # Closing tag: pop up to and including its element; a stray closing tag is ignored
-            for ($s = count($stack) - 1; $s >= 0; $s--) {
-                if ($stack[$s][0] === $name) {
-                    array_splice($stack, $s);
+            # Closing tag: pop up to and including its element; a stray closing tag is ignored. The
+            # count check makes a stray one O(1); otherwise the scan only passes elements it pops,
+            # so each element is scanned past at most once after it was pushed.
+            if (empty($openCounts[$name])) {
+                return;
+            }
+            while ($stack) {
+                [$popped] = array_pop($stack);
+                $openCounts[$popped]--;
+                if ($popped === $name) {
                     break;
                 }
             }
@@ -356,5 +381,6 @@ class ShortcodeParserExtension
             return;
         }
         $stack[] = [$name, $tag];
+        $openCounts[$name] = ($openCounts[$name] ?? 0) + 1;
     }
 }

@@ -394,6 +394,11 @@ class ShortcodeParserExtensionTest extends SapphireTest
             '60000 after a line break' => str_repeat("<p>a<br>\n [sc_block]\n</p>", 60000),
             '20000 unterminated comments' => str_repeat('<!-- x ', 20000) . '<p>[sc_block]</p>',
             '40000 shortcode openings without ]' => str_repeat('<p>[sc_block x</p>', 40000),
+            // A stray closing tag (none of its name open) must not scan the open-element stack:
+            // this took about 6 s when it did
+            '20000 stray closing tags inside 20000 open divs' => str_repeat('<div>', 20000) . str_repeat('</b>', 20000) . '<p>[sc_block]</p>',
+            // Past MAX_INLINE_DEPTH nothing is closed or reopened (see testInlineDepthIsCapped)
+            '1600 nested spans, 1600 shortcodes' => '<p>' . str_repeat('<span class="s">', 1600) . str_repeat('[sc_block] ', 1600) . '</p>',
         ];
         foreach ($cases as $label => $content) {
             $start = microtime(true);
@@ -401,6 +406,36 @@ class ShortcodeParserExtensionTest extends SapphireTest
             $seconds = microtime(true) - $start;
             $this->assertLessThan(1.5, $seconds, sprintf('%s took %.1f s', $label, $seconds));
         }
+    }
+
+    /**
+     * Inline ancestors are closed and reopened up to MAX_INLINE_DEPTH (10) levels; deeper than that
+     * the shortcode is left in place. Without the cap every shortcode closed and reopened every
+     * level, so the output grew with depth x shortcodes (400 levels and 400 shortcodes: 11 KB in,
+     * 3.7 MB out). Only onBeforeParse is run, so the raw result is compared.
+     */
+    public function testInlineDepthIsCapped()
+    {
+        $nested = function (int $depth, string $inner) {
+            return '<p>' . str_repeat('<span class="s">', $depth) . $inner . str_repeat('</span>', $depth) . '</p>';
+        };
+
+        // At the cap: the spans and the paragraph are closed before the shortcode
+        $content = $nested(10, 'a [sc_block] b');
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertStringContainsString(str_repeat('</span>', 10) . '</p>[sc_block]<p>', $content);
+
+        // One level deeper: left as it was
+        $input = $nested(11, 'a [sc_block] b');
+        $content = $input;
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertSame($input, $content);
+
+        // Many levels and many shortcodes: the output stays the size of the input
+        $input = '<p>' . str_repeat('<span class="s">', 400) . str_repeat('[sc_block] ', 400) . '</p>';
+        $content = $input;
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertSame(strlen($input), strlen($content));
     }
 
     public function testParserInstanceWithoutTheShortcodeRegisteredIsLeftAlone()

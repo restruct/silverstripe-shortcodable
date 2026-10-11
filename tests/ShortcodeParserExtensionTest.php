@@ -395,26 +395,56 @@ class ShortcodeParserExtensionTest extends SapphireTest
      * minutes when every shortcode re-scanned or copied the output built so far (or the rest of the
      * content), against milliseconds for the 5.1.0 regex. Only the extension's onBeforeParse hook is
      * run, not the whole parse, so the DOM pass in ShortcodeParser does not dominate the timing. The
-     * limit is generous on purpose: it separates linear from quadratic, it does not benchmark.
+     * limit is generous on purpose: it separates linear from quadratic, it does not benchmark. Each
+     * row also checks the exact output.
      */
     public function testCloseParentStaysLinearOnLargeContent()
     {
+        # Each row: [content, expected output]. The output is checked exactly, so a row does not
+        # rest on wall-clock time alone: a cap mutant (MAX_INLINE_DEPTH) changes the output of the
+        # nested-spans row. A purely quadratic regression gives the same output, so for those the
+        # time limit is the guard; it is generous (5 s against tens of milliseconds) so a slow CI
+        # runner does not flake it.
+        $n = 30000;
         $cases = [
-            '60000 block shortcodes' => str_repeat('<p>a [sc_block] b</p>', 60000),
-            '60000 after a line break' => str_repeat("<p>a<br>\n [sc_block]\n</p>", 60000),
-            '20000 unterminated comments' => str_repeat('<!-- x ', 20000) . '<p>[sc_block]</p>',
-            '40000 shortcode openings without ]' => str_repeat('<p>[sc_block x</p>', 40000),
+            '60000 block shortcodes' => [
+                str_repeat('<p>a [sc_block] b</p>', 60000),
+                str_repeat('<p>a </p>[sc_block]<p> b</p>', 60000),
+            ],
+            // The <br> before each shortcode is dropped and the emptied </p> after it consumed
+            '60000 after a line break' => [
+                str_repeat("<p>a<br>\n [sc_block]\n</p>", 60000),
+                str_repeat('<p>a</p>[sc_block]', 60000),
+            ],
+            // An unterminated comment runs to the end, so the shortcode is inside it: unchanged
+            '20000 unterminated comments' => [
+                str_repeat('<!-- x ', 20000) . '<p>[sc_block]</p>',
+                str_repeat('<!-- x ', 20000) . '<p>[sc_block]</p>',
+            ],
+            '40000 shortcode openings without ]' => [
+                str_repeat('<p>[sc_block x</p>', 40000),
+                str_repeat('<p>[sc_block x</p>', 40000),
+            ],
             // A stray closing tag (none of its name open) must not scan the open-element stack:
-            // this took about 6 s when it did
-            '20000 stray closing tags inside 20000 open divs' => str_repeat('<div>', 20000) . str_repeat('</b>', 20000) . '<p>[sc_block]</p>',
-            // Past MAX_INLINE_DEPTH nothing is closed or reopened (see testInlineDepthIsCapped)
-            '1600 nested spans, 1600 shortcodes' => '<p>' . str_repeat('<span class="s">', 1600) . str_repeat('[sc_block] ', 1600) . '</p>',
+            // 20000 of them took about 6 s when it did (and this grows with the square of $n)
+            "$n stray closing tags inside $n open divs" => [
+                str_repeat('<div>', $n) . str_repeat('</b>', $n) . '<p>[sc_block]</p>',
+                str_repeat('<div>', $n) . str_repeat('</b>', $n) . '[sc_block]',
+            ],
+            // Past MAX_INLINE_DEPTH nothing is closed or reopened (see testInlineDepthIsCapped);
+            // without the cap the output was 59 MB
+            '1600 nested spans, 1600 shortcodes' => [
+                '<p>' . str_repeat('<span class="s">', 1600) . str_repeat('[sc_block] ', 1600) . '</p>',
+                '<p>' . str_repeat('<span class="s">', 1600) . str_repeat('[sc_block] ', 1600) . '</p>',
+            ],
         ];
-        foreach ($cases as $label => $content) {
+        foreach ($cases as $label => [$content, $expected]) {
             $start = microtime(true);
             ShortcodeParser::get()->extend('onBeforeParse', $content);
             $seconds = microtime(true) - $start;
-            $this->assertLessThan(1.5, $seconds, sprintf('%s took %.1f s', $label, $seconds));
+            $this->assertLessThan(5, $seconds, sprintf('%s took %.1f s', $label, $seconds));
+            # assertTrue rather than assertSame: a failing diff of several MB is unreadable
+            $this->assertTrue($content === $expected, sprintf('%s: output differs (%d bytes, expected %d)', $label, strlen($content), strlen($expected)));
         }
     }
 

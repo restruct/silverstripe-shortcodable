@@ -217,7 +217,8 @@ class ShortcodeParserExtension
                 continue;
             }
 
-            # The elements to close, innermost first: inline ancestors up to the first block one, and
+            # The elements to close, innermost first, as [name, opening tag, stack index]: inline
+            # ancestors up to the first block one, and
             # that block one only if it cannot hold block content (CLOSABLE_ELEMENTS). A container
             # (<div>, <li>, <td>, <blockquote>, ...) stops the walk without being closed: splitting it
             # would break the list or table around it (issue #9).
@@ -229,11 +230,11 @@ class ShortcodeParserExtension
                         $chain = [];
                         break;
                     }
-                    $chain[] = $stack[$s];
+                    $chain[] = [$stack[$s][0], $stack[$s][1], $s];
                     continue;
                 }
                 if (in_array($stack[$s][0], self::CLOSABLE_ELEMENTS)) {
-                    $chain[] = $stack[$s];
+                    $chain[] = [$stack[$s][0], $stack[$s][1], $s];
                 }
                 break;
             }
@@ -286,8 +287,13 @@ class ShortcodeParserExtension
             # before (an id must not be duplicated); inline ones keep their attributes, so a link or
             # a styled span carries on after the shortcode - minus their id (and a link's name
             # anchor), which must stay unique.
-            foreach (array_reverse($chain) as [$elName, $openTag]) {
-                $out[] = $this->isInline($elName) ? $this->withoutUniqueAttributes($openTag, $elName) : "<{$elName}>";
+            # The stack entry takes the reopened tag, as that is what now stands open in the output:
+            # a second shortcode right after then sees a bare reopened <p> and drops it instead of
+            # leaving an empty <p></p> between the two (when the original <p> had attributes).
+            foreach (array_reverse($chain) as [$elName, $openTag, $stackIndex]) {
+                $reopened = $this->isInline($elName) ? $this->withoutUniqueAttributes($openTag, $elName) : "<{$elName}>";
+                $stack[$stackIndex][1] = $reopened;
+                $out[] = $reopened;
             }
         }
 

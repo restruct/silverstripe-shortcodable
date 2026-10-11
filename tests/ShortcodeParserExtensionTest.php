@@ -131,6 +131,16 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<p>[sc_block][sc_block]</p>',
                 "$b$b",
             ],
+            // The reopened parent is bare, so it is dropped between two shortcodes even when the
+            // original had attributes; an inline one keeps its attributes, so it stays
+            'two adjacent in a paragraph with attributes' => [
+                '<p class="lead">A [sc_block][sc_block] B</p>',
+                "<p class=\"lead\">A </p>$b$b<p> B</p>",
+            ],
+            'two with a space in a paragraph with attributes' => [
+                '<p class="lead">A [sc_block] [sc_block] B</p>',
+                "<p class=\"lead\">A </p>$b$b<p> B</p>",
+            ],
             'inline shortcode before a block one' => [
                 '<p>[sc_simple] and [sc_block]</p>',
                 '<p>SIMPLE[] and </p>' . $b,

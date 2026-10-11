@@ -127,8 +127,12 @@ class ShortcodeParserExtension
         # the content (as it does for an HTML parser), instead of every '<!--' re-scanning to the end;
         # and a shortcode's attributes stop at the next '[', so many '[tag' without a ']' do not each
         # scan the rest of the content.
+        # A tag runs to the first '>' outside a quoted attribute value: `<a title="a>b">` is one tag.
+        # Stopping at the first '>' (as `[^>]*>` did) cut it at `a>` and pulled the text after the
+        # tag into the reopened copy. The quantifiers are possessive so an unterminated quote fails
+        # the tag at once (it is then text) instead of backtracking, which keeps the scan linear.
         $pattern = '%(?<comment><!--.*?(?:-->|$))'
-            . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])[^>]*>)'
+            . '|(?<tag></?(?<name>[a-z][a-z0-9-]*)(?=[\s/>])(?:[^>"\']++|"[^"]*+"|\'[^\']*+\')*+>)'
             . '|(?<sc>\[(?<sctag>' . $tagAlternation . ')(?=[\s\],/])[^\]\[]*\](?:[^\[]*?\[/\k<sctag>\])*)%is';
         # Tokenise: text between the matches, plus each match with its kind. One match at a time
         # (preg_match from an offset, not preg_match_all) and kept as three flat lists rather than an

@@ -236,6 +236,15 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<p><strong>a [sc_block]<strong>x</strong> b</strong></p>',
                 "<p><strong>a </strong></p>$b<p><strong><strong>x</strong> b</strong></p>",
             ],
+            // A '>' inside a quoted attribute value does not end the tag, double or single quoted
+            'link with > in a double-quoted title' => [
+                '<p><a title="a>b" href="/x">x [sc_block] y</a></p><p>Next paragraph</p>',
+                "<p><a title=\"a>b\" href=\"/x\">x </a></p>$b<p><a title=\"a>b\" href=\"/x\"> y</a></p><p>Next paragraph</p>",
+            ],
+            'link with > in a single-quoted title' => [
+                "<p><a title='a>b' href=\"/x\">x [sc_block] y</a></p><p>Next</p>",
+                "<p><a title=\"a>b\" href=\"/x\">x </a></p>$b<p><a title=\"a>b\" href=\"/x\"> y</a></p><p>Next</p>",
+            ],
             // A tag that merely starts with the block tag's name is another shortcode
             'other shortcode sharing the prefix' => [
                 '<p>Some [sc_block_other] x</p>',

@@ -1,5 +1,45 @@
 # Changelog
 
+## 5.2.0 (2026-10-11)
+
+### Changed
+
+- **`shortcode_close_parent` only closes elements that cannot hold block content** (#9). A block
+  shortcode now closes `<p>`, `<h1>`-`<h6>`, `<pre>` and `<summary>`, whose content model is phrasing
+  content, plus any inline elements (`<strong>`, `<a>`) between it and that element. Containers that
+  can already hold block content (`<div>`, `<li>`, `<td>`, `<th>`, `<dt>`, `<dd>`, `<address>`,
+  `<blockquote>`, `<section>`, `<article>`, `<figure>` and the like) are left whole, so a shortcode in a list item or table cell no longer
+  breaks the list or table. Inline elements inside such a container are still closed and reopened
+  around the shortcode.
+  **Behaviour change:** 5.1.0 closed a container when it was on the same line as the shortcode, so
+  `<div>[sc]</div>` came out as just the shortcode output, without the `<div>`. It now stays
+  `<div>[sc output]</div>`; the same goes for `<li>[sc]</li>` and `<td>[sc]</td>`. Content that
+  relied on the wrapping `<div>` being removed needs the shortcode moved out of it.
+
+### Fixed
+
+- **`shortcode_close_parent` closes the shortcode's own wrapping element** (#8). It closed the first
+  element it could find earlier on the same line instead, so `<h3>Address</h3><p>[sc]</p>` came out
+  as `<p></h3>[sc]<h3></p>`, which browsers repair into a stray empty `<h3>` with the `<p>` left open.
+  Also wrong before: an outer `<div>` was closed instead of the `<p>` inside it, a `<hr>` or a tag
+  inside an HTML comment could be taken as the parent, a second block shortcode in the same
+  paragraph was left inside it, a shortcode outside any element got a stray empty `<p>`, and
+  `[sc_block_other]` was handled as `[sc_block]`. The content is now walked tag by tag. When the
+  shortcode sits inside inline elements (`<strong>`, `<a>`), those are closed too, up to the block
+  element holding them, and reopened after it with their attributes.
+  **Multi-line content:** 5.1.0 only looked within one line, so a paragraph or heading on a line of
+  its own (`<p>\n[sc]\n</p>`) was left alone; it is now closed as well. Containers are not, on any
+  number of lines (see Changed above).
+  The walk also covers what the 5.1.0 regex got right or did not need: comma-separated shortcode
+  attributes (`[sc,id=1]`), custom elements with a hyphen in their name (`<my-el>`, read whole and
+  treated as inline), reopened inline elements without their `id` (or a link's `name`), so an
+  anchor is not repeated, and a `>` inside a quoted attribute value.
+  **Limit:** a block shortcode inside more than 10 nested inline elements, or inside inline
+  elements whose opening tags add up to more than 8 KB, is left where it is, untouched. Closing
+  and reopening every level for every shortcode made the output grow with nesting depth (or tag
+  length) times the number of shortcodes. With the limits, the markup reopened per shortcode is
+  bounded (10 elements, 8 KB), so the time and the output size grow linearly with the content.
+
 ## 5.1.0 (2026-09-25)
 
 **One line for Silverstripe 5 and 6.** `main` now declares `silverstripe/framework ^5 || ^6` on PHP

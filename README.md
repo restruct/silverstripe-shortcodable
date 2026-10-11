@@ -108,6 +108,18 @@ In this module, `$shortcodable_is_block` and `$disable_wrapper` have been replac
 
 If you set `$shortcode_close_parent` to true, the parent node will be closed before your shortcode output and reopened after. <br>
 Eg `<p>Some [shortcode] content</p>` would become `<p>Some </p>[shortcode]<p> content</p>`;
+If the shortcode sits inside inline elements (eg `<p><strong>Some [shortcode]</strong></p>`), those are closed
+as well, up to the block element holding them, and reopened after the shortcode. A bare element (no attributes)
+that would be left empty on either side is dropped instead.
+
+Only elements that cannot hold block content are closed: `<p>`, `<h1>`-`<h6>`, `<pre>` and `<summary>` (plus
+inline elements). Containers that can already hold block content, such as `<div>`, `<li>`, `<td>`, `<dt>`, `<dd>`,
+`<address>`, `<blockquote>` and `<section>`, are left whole: `<li>[shortcode]</li>` stays a list item with the shortcode
+output inside it. Inline elements inside such a container are still closed and reopened around the shortcode.
+A shortcode nested inside more than 10 inline elements, or inside inline elements whose opening tags add up to more
+than 8 KB, is left untouched (a guard against pathological markup).
+Up to 5.1.0 a container on the same line was closed too, so `<div>[shortcode]</div>` lost its `<div>`; since 5.2.0
+it is kept.
 
 
 ## Shortcode placeholder images

@@ -202,6 +202,15 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 "<p><span class=\"c\" id='s1' data-id=\"1\">a [sc_block] b</span></p>",
                 "<p><span class=\"c\" id=\"s1\" data-id=\"1\">a </span></p>$b<p><span class=\"c\" data-id=\"1\"> b</span></p>",
             ],
+            // Only real id/name attributes are dropped, not `id=` text inside another attribute's value
+            'id= inside a quoted title' => [
+                '<p><span title=" id=1" class="c" id="s">x [sc_block] y</span></p>',
+                "<p><span title=\" id=1\" class=\"c\" id=\"s\">x </span></p>$b<p><span title=\" id=1\" class=\"c\"> y</span></p>",
+            ],
+            'id= at the end of a quoted title before href' => [
+                '<p><a title="see id=" href="/x" name=top>x [sc_block] y</a></p>',
+                "<p><a title=\"see id=\" href=\"/x\" name=\"top\">x </a></p>$b<p><a title=\"see id=\" href=\"/x\"> y</a></p>",
+            ],
             // Tags inside a comment are not elements
             'comment containing tags inside the parent' => [
                 '<p>a <!-- </p><div> --> [sc_block] b</p>',

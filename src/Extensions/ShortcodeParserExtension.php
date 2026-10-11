@@ -308,8 +308,19 @@ class ShortcodeParserExtension
     private function withoutUniqueAttributes(string $openTag, string $name): string
     {
         $attributes = $name === 'a' ? 'id|name' : 'id';
-        # Whitespace before the name, so data-id or aria-name are left alone; quoted or bare values
-        return preg_replace('%\s+(?:' . $attributes . ')\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>"\']+)%i', '', $openTag);
+        # Walk the tag with the same quote-aware alternation as the tag match: a quoted value is
+        # consumed whole by the first alternative, so `id=` written inside another attribute's value
+        # (title=" id=1") is never seen as an attribute. Only a real id/name attribute matches the
+        # second alternative (whitespace before the name, so data-id or aria-name are left alone;
+        # quoted, bare or no value) and is dropped; everything else is put back unchanged.
+        // return preg_replace('%\s+(?:' . $attributes . ')\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>"\']+)%i', '', $openTag);
+        return preg_replace_callback(
+            '%"[^"]*+"|\'[^\']*+\'|(?<drop>\s+(?:' . $attributes . ')(?=[\s=/>])(?:\s*=\s*(?:"[^"]*+"|\'[^\']*+\'|[^\s>"\']++))?)%i',
+            function ($match) {
+                return isset($match['drop']) && $match['drop'] !== '' ? '' : $match[0];
+            },
+            $openTag
+        );
     }
 
     /**

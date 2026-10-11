@@ -34,9 +34,10 @@
   attributes (`[sc,id=1]`), custom elements with a hyphen in their name (`<my-el>`, read whole and
   treated as inline), reopened inline elements without their `id` (or a link's `name`), so an
   anchor is not repeated, and a `>` inside a quoted attribute value.
-  **Limit:** a block shortcode inside more than 10 nested inline elements is left where it is,
-  untouched. Closing and reopening every level for every shortcode made the output grow with
-  nesting depth times the number of shortcodes; with the limit, the time and the output size grow
+  **Limit:** a block shortcode inside more than 10 nested inline elements, or inside inline
+  elements whose opening tags add up to more than 1 KB, is left where it is, untouched. Closing
+  and reopening every level for every shortcode made the output grow with nesting depth (or tag
+  length) times the number of shortcodes; with the limits, the time and the output size grow
   linearly with the content.
 
 ## 5.1.0 (2026-09-25)

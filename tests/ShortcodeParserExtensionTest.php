@@ -468,6 +468,31 @@ class ShortcodeParserExtensionTest extends SapphireTest
         $this->assertSame(strlen($input), strlen($content));
     }
 
+    /**
+     * Inline opening tags are reopened only up to MAX_REOPEN_LENGTH (1 KB) in total; with longer
+     * tags the shortcode is left in place. Without the cap every shortcode repeated the whole tag,
+     * so a 20 KB title around 1000 shortcodes gave 31 KB in, 20 MB out.
+     */
+    public function testReopenedTagLengthIsCapped()
+    {
+        // Under the cap: the span is closed and reopened (its title included) around the shortcode
+        $content = '<p><span title="' . str_repeat('x', 900) . '">a [sc_block] b</span></p>';
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertStringContainsString('</span></p>[sc_block]<p><span title=', $content);
+
+        // Over the cap: left as it was
+        $input = '<p><span title="' . str_repeat('x', 1100) . '">a [sc_block] b</span></p>';
+        $content = $input;
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertSame($input, $content);
+
+        // A 20 KB tag around 1000 shortcodes: the output stays the size of the input
+        $input = '<p><span title="' . str_repeat('x', 20000) . '">' . str_repeat('[sc_block] ', 1000) . '</span></p>';
+        $content = $input;
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertSame(strlen($input), strlen($content));
+    }
+
     public function testParserInstanceWithoutTheShortcodeRegisteredIsLeftAlone()
     {
         // A separate parser instance (like the 'regenerator' one) that does not know sc_block

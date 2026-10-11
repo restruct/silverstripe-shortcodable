@@ -108,6 +108,14 @@ class ShortcodeParserExtension
     private const MAX_INLINE_DEPTH = 10;
 
     /**
+     * The most bytes of inline opening tags reopened after one block shortcode. Each reopened inline
+     * element repeats its whole opening tag, so a long tag (a 20 KB title) around many shortcodes
+     * made the output grow with tag length x shortcodes (1000 shortcodes: 31 KB in, 20 MB out).
+     * Past this length the shortcode is left in place, untouched, as for MAX_INLINE_DEPTH.
+     */
+    private const MAX_REOPEN_LENGTH = 1024;
+
+    /**
      * Close the element(s) wrapping each block shortcode before it and reopen them after it, eg
      * `<p>Some [sc] content</p>` becomes `<p>Some </p>[sc]<p> content</p>`.
      *
@@ -222,11 +230,19 @@ class ShortcodeParserExtension
             # that block one only if it cannot hold block content (CLOSABLE_ELEMENTS). A container
             # (<div>, <li>, <td>, <blockquote>, ...) stops the walk without being closed: splitting it
             # would break the list or table around it (issue #9).
-            # More than MAX_INLINE_DEPTH inline ancestors: leave the shortcode in place (see there).
+            # More than MAX_INLINE_DEPTH inline ancestors, or more than MAX_REOPEN_LENGTH bytes of inline
+            # opening tags to reopen: leave the shortcode in place (see there).
             $chain = [];
+            $reopenLength = 0;
             for ($s = count($stack) - 1; $s >= 0; $s--) {
                 if ($this->isInline($stack[$s][0])) {
                     if (count($chain) >= self::MAX_INLINE_DEPTH) {
+                        $chain = [];
+                        break;
+                    }
+                    # The reopened copy is about as long as the opening tag (minus an id/name)
+                    $reopenLength += strlen($stack[$s][1]);
+                    if ($reopenLength > self::MAX_REOPEN_LENGTH) {
                         $chain = [];
                         break;
                     }

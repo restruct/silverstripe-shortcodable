@@ -18,7 +18,7 @@ const cases: [string, string, string][] = [
     ['hr sibling before', '<hr><p>[scb_block]</p>', `<hr>${B}`],
     ['top level, between paragraphs', '<p>Intro</p>[scb_block]<p>Outro</p>', `<p>Intro</p>${B}<p>Outro</p>`],
     // Issue #9 (b): a container that can hold block content is left whole, on one line or several;
-    // only p, h1-h6, pre, address, dt and summary (plus inline ancestors) are closed
+    // only p, h1-h6, pre and summary (plus inline ancestors) are closed
     ['list item, multi-line (#9)', '<ul>\n<li>\n[scb_block]\n</li>\n</ul>', `<ul>\n<li>\n${B}\n</li>\n</ul>`],
     ['table cell, one line (#9)', '<table><tr><td>[scb_block]</td></tr></table>', `<table><tr><td>${B}</td></tr></table>`],
     ['div, one line (#9)', '<div>[scb_block]</div>', `<div>${B}</div>`],

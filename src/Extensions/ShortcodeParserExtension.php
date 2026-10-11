@@ -90,9 +90,12 @@ class ShortcodeParserExtension
      * so block output cannot stay inside them (issue #9, option b). Every other block element - div,
      * li, td, th, dd, blockquote, section, article, figure and the like - can already hold block
      * content, so a shortcode directly inside one is left in place and the element is not split.
+     * address and dt are not listed: in the WHATWG HTML standard both take flow content (with some
+     * descendants excluded), so they can hold a <div>; closing a <dt> would also leave the block
+     * output directly inside the <dl>. summary is phrasing content (optionally with headings).
      */
     private const CLOSABLE_ELEMENTS = [
-        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'address', 'dt', 'summary',
+        'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre', 'summary',
     ];
 
     /**

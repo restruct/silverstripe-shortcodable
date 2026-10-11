@@ -5,10 +5,10 @@
 ### Changed
 
 - **`shortcode_close_parent` only closes elements that cannot hold block content** (#9). A block
-  shortcode now closes `<p>`, `<h1>`-`<h6>`, `<pre>`, `<address>`, `<dt>` and `<summary>`, plus any
-  inline elements (`<strong>`, `<a>`) between it and that element. Containers that can already hold
-  block content (`<div>`, `<li>`, `<td>`, `<th>`, `<dd>`, `<blockquote>`, `<section>`, `<article>`,
-  `<figure>` and the like) are left whole, so a shortcode in a list item or table cell no longer
+  shortcode now closes `<p>`, `<h1>`-`<h6>`, `<pre>` and `<summary>`, whose content model is phrasing
+  content, plus any inline elements (`<strong>`, `<a>`) between it and that element. Containers that
+  can already hold block content (`<div>`, `<li>`, `<td>`, `<th>`, `<dt>`, `<dd>`, `<address>`,
+  `<blockquote>`, `<section>`, `<article>`, `<figure>` and the like) are left whole, so a shortcode in a list item or table cell no longer
   breaks the list or table. Inline elements inside such a container are still closed and reopened
   around the shortcode.
   **Behaviour change:** 5.1.0 closed a container when it was on the same line as the shortcode, so

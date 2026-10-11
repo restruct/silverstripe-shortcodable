@@ -265,7 +265,7 @@ class ShortcodeParserExtensionTest extends SapphireTest
 
     /**
      * Issue #9, option (b): a block shortcode closes only block elements that cannot hold block
-     * content (p, h1-h6, pre, address, dt, summary) plus inline ancestors. A container that can
+     * content (p, h1-h6, pre, summary) plus inline ancestors. A container that can
      * already hold block content (div, li, td, blockquote, section, ...) is left whole, on one line
      * or several: splitting it would delete or break the list item, table cell or quote around it.
      * Input => expected output, compared structurally as in the #8 table above.
@@ -312,6 +312,15 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<dl><dt>T</dt><dd>x [sc_block] y</dd></dl>',
                 "<dl><dt>T</dt><dd>x $b y</dd></dl>",
             ],
+            // address and dt take flow content (WHATWG), so they are containers too
+            'address' => [
+                '<address>Street [sc_block] 1</address>',
+                "<address>Street $b 1</address>",
+            ],
+            'definition term' => [
+                '<dl><dt>Term [sc_block]</dt><dd>x</dd></dl>',
+                "<dl><dt>Term $b</dt><dd>x</dd></dl>",
+            ],
             // A <br> before the shortcode stays when nothing is closed, as at the top level
             'br before, inside a div' => [
                 '<div>Line<br>[sc_block]</div>',
@@ -336,7 +345,7 @@ class ShortcodeParserExtensionTest extends SapphireTest
                 '<ul><li><p>x [sc_block] y</p></li></ul>',
                 "<ul><li><p>x </p>$b<p> y</p></li></ul>",
             ],
-            // The closable elements besides p and h1-h6 (those are in the #8 table)
+            // The closable elements besides p and h1-h6 (those are in the #8 table): pre and summary
             'pre, multi-line' => [
                 "<pre>\nline\n[sc_block]\n</pre>",
                 "<pre>\nline\n</pre>$b",
@@ -344,14 +353,6 @@ class ShortcodeParserExtensionTest extends SapphireTest
             'h4' => [
                 '<h4>Title [sc_block]</h4>',
                 "<h4>Title </h4>$b",
-            ],
-            'address' => [
-                '<address>Street [sc_block] 1</address>',
-                "<address>Street </address>$b<address> 1</address>",
-            ],
-            'definition term' => [
-                '<dl><dt>Term [sc_block]</dt><dd>x</dd></dl>',
-                "<dl><dt>Term </dt>$b<dd>x</dd></dl>",
             ],
             'summary' => [
                 '<details><summary>S [sc_block]</summary>body</details>',

@@ -523,19 +523,25 @@ class ShortcodeParserExtensionTest extends SapphireTest
     }
 
     /**
-     * Inline opening tags are reopened only up to MAX_REOPEN_LENGTH (1 KB) in total; with longer
+     * Inline opening tags are reopened only up to MAX_REOPEN_LENGTH (8 KB) in total; with longer
      * tags the shortcode is left in place. Without the cap every shortcode repeated the whole tag,
      * so a 20 KB title around 1000 shortcodes gave 31 KB in, 20 MB out.
      */
     public function testReopenedTagLengthIsCapped()
     {
-        // Under the cap: the span is closed and reopened (its title included) around the shortcode
-        $content = '<p><span title="' . str_repeat('x', 900) . '">a [sc_block] b</span></p>';
+        // A long real-world link (an Outlook safelinks href is about 1.1 KB) is closed and reopened
+        $href = 'https://eur01.safelinks.protection.outlook.com/?url=' . str_repeat('a%2F', 270);
+        $content = '<p><a href="' . $href . '">a [sc_block] b</a></p>';
+        ShortcodeParser::get()->extend('onBeforeParse', $content);
+        $this->assertStringContainsString('</a></p>[sc_block]<p><a href="' . $href . '">', $content);
+
+        // Just under the cap (the tag is 8115 bytes): closed and reopened, its title included
+        $content = '<p><span title="' . str_repeat('x', 8100) . '">a [sc_block] b</span></p>';
         ShortcodeParser::get()->extend('onBeforeParse', $content);
         $this->assertStringContainsString('</span></p>[sc_block]<p><span title=', $content);
 
-        // Over the cap: left as it was
-        $input = '<p><span title="' . str_repeat('x', 1100) . '">a [sc_block] b</span></p>';
+        // Just over the cap (8215 bytes): left as it was
+        $input = '<p><span title="' . str_repeat('x', 8200) . '">a [sc_block] b</span></p>';
         $content = $input;
         ShortcodeParser::get()->extend('onBeforeParse', $content);
         $this->assertSame($input, $content);

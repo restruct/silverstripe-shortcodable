@@ -35,10 +35,10 @@
   treated as inline), reopened inline elements without their `id` (or a link's `name`), so an
   anchor is not repeated, and a `>` inside a quoted attribute value.
   **Limit:** a block shortcode inside more than 10 nested inline elements, or inside inline
-  elements whose opening tags add up to more than 1 KB, is left where it is, untouched. Closing
+  elements whose opening tags add up to more than 8 KB, is left where it is, untouched. Closing
   and reopening every level for every shortcode made the output grow with nesting depth (or tag
-  length) times the number of shortcodes; with the limits, the time and the output size grow
-  linearly with the content.
+  length) times the number of shortcodes. With the limits, the markup reopened per shortcode is
+  bounded (10 elements, 8 KB), so the time and the output size grow linearly with the content.
 
 ## 5.1.0 (2026-09-25)
 

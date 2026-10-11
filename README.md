@@ -117,7 +117,7 @@ inline elements). Containers that can already hold block content, such as `<div>
 `<address>`, `<blockquote>` and `<section>`, are left whole: `<li>[shortcode]</li>` stays a list item with the shortcode
 output inside it. Inline elements inside such a container are still closed and reopened around the shortcode.
 A shortcode nested inside more than 10 inline elements, or inside inline elements whose opening tags add up to more
-than 1 KB, is left untouched (a guard against pathological markup).
+than 8 KB, is left untouched (a guard against pathological markup).
 Up to 5.1.0 a container on the same line was closed too, so `<div>[shortcode]</div>` lost its `<div>`; since 5.2.0
 it is kept.
 

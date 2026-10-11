@@ -111,9 +111,11 @@ class ShortcodeParserExtension
      * The most bytes of inline opening tags reopened after one block shortcode. Each reopened inline
      * element repeats its whole opening tag, so a long tag (a 20 KB title) around many shortcodes
      * made the output grow with tag length x shortcodes (1000 shortcodes: 31 KB in, 20 MB out).
-     * Past this length the shortcode is left in place, untouched, as for MAX_INLINE_DEPTH.
+     * Past this length the shortcode is left in place, untouched, as for MAX_INLINE_DEPTH. 8 KB, not
+     * less: real links can be long (an Outlook safelinks href is about 1.1 KB) and must still be
+     * closed and reopened.
      */
-    private const MAX_REOPEN_LENGTH = 1024;
+    private const MAX_REOPEN_LENGTH = 8192;
 
     /**
      * Close the element(s) wrapping each block shortcode before it and reopen them after it, eg

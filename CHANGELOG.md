@@ -4,12 +4,18 @@ This file covers the 4.x line (Silverstripe 4 and 5). Later releases are documen
 
 ## 4.0.18 (2026-11-02)
 
+### Security
+
+- **Script in a selected shortcode's attributes no longer runs when the shortcode dialog is opened**
+  ([GHSA-c6p4-wpcv-vj6x](https://github.com/restruct/silverstripe-shortcodable/security/advisories/GHSA-c6p4-wpcv-vj6x),
+  stored XSS, Medium). Opening the dialog on a selected shortcode built it as an element in the CMS
+  document to read its attributes, so a CMS editor could type `[img src="x" onerror="..."]` as text
+  and have it run in the session of whoever selected it and opened the dialog. The attributes are
+  now parsed in an inert document; values, entities and lower-cased attribute names come out as
+  before. Upgrading is recommended.
+
 ### Fixed
 
-- **The attributes of a shortcode selected in the editor are parsed without creating DOM nodes.**
-  Opening the dialog on a selected shortcode built it as an element in the CMS document to read its
-  attributes. They are now parsed in an inert document; values, entities and lower-cased attribute
-  names come out as before. Upgrading is recommended.
 - **Shortcode names with digits are matched whole** (#11). The placeholder pattern stopped a name at
   its first digit, so `[year2]` was taken for `[year]` with an attribute `2` and saved back as
   `[year 2]`, and a registered name such as `h2_title` got no placeholder. Names are now matched as

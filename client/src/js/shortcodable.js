@@ -203,14 +203,23 @@
             }
 
             if (placeholder_shortcodes) {
-                return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
+                // A name is what ShortcodeParser accepts (\w+) and ends at whitespace or ']' (#11:
+                // [a-z_]+ followed by \s* stopped a name at its first digit, so [year2] was taken
+                // for [year] with an attribute '2' and saved back as [year 2])
+//                return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
+                return source.replace(/\[(\w+)(?:\s+([^\]]*))?\]/g, function (found, name, params) {
+                    // no attributes: params is undefined, and the shortcode text gets no trailing space
+                    params = params || '';
+                    var shortcodeText = params ? name + ' ' + params : name;
                     if (placeholder_shortcodes.indexOf(name) !== -1) {
                        var id = shortcodable.parseAttributeValue(params, 'id');
-                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
+//                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
+                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + shortcodeText + ']');
                        var el = $('<img/>')
                            .attr('type', 'image/svg+xml')
                            .attr('class', 'sc-placeholder mceItem mceNonEditable')
-                           .attr('title', name + ' ' + params)
+//                           .attr('title', name + ' ' + params)
+                           .attr('title', shortcodeText)
                            .attr('src', src);
                        // console.log(el.prop('outerHTML'));
                        return el.prop('outerHTML');

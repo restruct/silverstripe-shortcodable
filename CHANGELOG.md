@@ -2,6 +2,20 @@
 
 This file covers the 4.x line (Silverstripe 4 and 5). Later releases are documented on `main`.
 
+## 4.0.18 (2026-11-02)
+
+### Fixed
+
+- **The attributes of a shortcode selected in the editor are parsed without creating DOM nodes.**
+  Opening the dialog on a selected shortcode built it as an element in the CMS document to read its
+  attributes. They are now parsed in an inert document; values, entities and lower-cased attribute
+  names come out as before. Upgrading is recommended.
+- **Shortcode names with digits are matched whole** (#11). The placeholder pattern stopped a name at
+  its first digit, so `[year2]` was taken for `[year]` with an attribute `2` and saved back as
+  `[year 2]`, and a registered name such as `h2_title` got no placeholder. Names are now matched as
+  Silverstripe's `ShortcodeParser` matches them (`\w+`, ending at whitespace or `]`). A shortcode
+  without attributes has no trailing space in its placeholder title any more.
+
 ## 4.0.17
 
 ### Fixed

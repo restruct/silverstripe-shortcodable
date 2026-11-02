@@ -128,13 +128,48 @@
             }
 
             // Now 'parse' the shortcode attributes by creating it in jQuery as if it's an HTML node;
-            var shortcodeData = { 'ShortcodeType': selectedTxt.slice(1,-1).split(' ').shift() };
-            $.each($(`<${selectedTxt.slice(1,-1)} />`).get(0).attributes, function(index, attr){
-                shortcodeData[attr.name] = attr.value
+            // (no longer in jQuery: $('<...>') builds the element in the live CMS document, where
+            // an attribute such as onerror runs and a src is fetched. The selection is text any
+            // CMS editor can type, so it is parsed in an inert document instead, see parseAttributes)
+            var shortcodeName = selectedTxt.slice(1,-1).split(' ').shift();
+            var shortcodeData = { 'ShortcodeType': shortcodeName };
+//            $.each($(`<${selectedTxt.slice(1,-1)} />`).get(0).attributes, function(index, attr){
+//                shortcodeData[attr.name] = attr.value
+//            });
+            $.each(shortcodable.parseAttributes(selectedTxt.slice(1,-1).slice(shortcodeName.length)), function(name, value){
+                shortcodeData[name] = value;
             });
             // console.log('106: ', shortcodeData);
 
             return shortcodeData;
+        },
+
+        // An HTML document without a browsing context: elements created in it never run event
+        // handlers or scripts and never fetch resources. Created once, on first use.
+        inertDocument: null,
+        getInertDocument: function() {
+            if (!shortcodable.inertDocument) {
+                shortcodable.inertDocument = document.implementation.createHTMLDocument('');
+            }
+            return shortcodable.inertDocument;
+        },
+
+        // Parse a shortcode's attribute string (everything after the name, eg ' id="1" title=x') into
+        // {name: value}. The HTML attribute parser of an inert document does the work, so quoting,
+        // entities and (lower-cased) names come out exactly as they did when this went through
+        // jQuery, but nothing in the string can act on the CMS document. A fixed tag name keeps the
+        // shortcode's own name (which may be 'table', 'tr', ...) out of the parsing.
+        parseAttributes: function(attrString) {
+            var wrapper = shortcodable.getInertDocument().createElement('div');
+            wrapper.innerHTML = '<span ' + attrString + '></span>';
+            var attrs = {};
+            var el = wrapper.firstChild;
+            if (el && el.attributes) {
+                $.each(el.attributes, function(index, attr){
+                    attrs[attr.name] = attr.value;
+                });
+            }
+            return attrs;
         },
 
         // get a specific attribute value from a shortcode string by its key, eg 'id' from '[myshortcode id="1" other="etc"]
@@ -165,14 +200,23 @@
             }
 
             if (placeholder_shortcodes) {
-                return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
+                // A name is what ShortcodeParser accepts (\w+) and ends at whitespace or ']' (#11:
+                // [a-z_]+ followed by \s* stopped a name at its first digit, so [year2] was taken
+                // for [year] with an attribute '2' and saved back as [year 2])
+//                return source.replace(/\[([a-z_]+)\s*([^\]]*)\]/gi, function (found, name, params) {
+                return source.replace(/\[(\w+)(?:\s+([^\]]*))?\]/g, function (found, name, params) {
+                    // no attributes: params is undefined, and the shortcode text gets no trailing space
+                    params = params || '';
+                    var shortcodeText = params ? name + ' ' + params : name;
                     if (placeholder_shortcodes.indexOf(name) !== -1) {
                        var id = shortcodable.parseAttributeValue(params, 'id');
-                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
+//                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + name + ' ' + params + ']');
+                       var src = encodeURI(shortcodable.controller_url + '/placeholder/' + name + '/' + id + '?sc=[' + shortcodeText + ']');
                        var el = $('<img/>')
                            .attr('type', 'image/svg+xml')
                            .attr('class', 'sc-placeholder mceItem mceNonEditable')
-                           .attr('title', name + ' ' + params)
+//                           .attr('title', name + ' ' + params)
+                           .attr('title', shortcodeText)
                            .attr('src', src);
                        // console.log(el.prop('outerHTML'));
                        return el.prop('outerHTML');
@@ -187,7 +231,12 @@
         // Substitutes placeholder images with their shortcode equivalents
         placeholdersToShortcodes: function(source, editor) {
             // find & replace .sc-placeholder images in the html
-            var wrappedContent = $('<div>' + source + '</div>');
+            // (in an inert document rather than the live CMS one, so nothing in the content can run
+            // or load while it is rewritten; innerHTML directly, as jQuery's .html() may evaluate scripts)
+//            var wrappedContent = $('<div>' + source + '</div>');
+            var wrapper = shortcodable.getInertDocument().createElement('div');
+            wrapper.innerHTML = source;
+            var wrappedContent = $(wrapper);
             wrappedContent.find('.sc-placeholder').each(function () {
                 var el = $(this);
                 el.replaceWith('[' + tinymce.trim(el.attr('title')) + ']');

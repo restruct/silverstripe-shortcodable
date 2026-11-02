@@ -12,7 +12,7 @@
         "wysiwyg",
         "htmleditor"
     ],
-    "license": "BSD-3-Clause",
+    "license": "MIT",
     "authors": [
         {
             "name": "Restruct",

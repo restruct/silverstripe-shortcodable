@@ -21,14 +21,16 @@ test.describe('Editor integration', () => {
 
         const img = placeholders(page);
         await expect(img).toHaveCount(1);
-        await expect(img).toHaveAttribute('title', 'scb_year ');
+        // No trailing space since #11 (was 'scb_year ').
+        await expect(img).toHaveAttribute('title', 'scb_year');
         await expect(img).toHaveAttribute('src', /^admin\/shortcodable\/placeholder\/scb_year\/\?sc=/);
         // The placeholder action redirects to placehold.img, which answers an SVG.
         const response = await svg;
         expect(response.status()).toBe(200);
         expect(response.headers()['content-type']).toContain('image/svg+xml');
-        // Default size: 46 px high, 60 + fontsize/1.8 per character of "[scb_year ]" wide.
-        expect(await loadedSize(img)).toEqual({ w: 157, h: 46 });
+        // Default size: 46 px high, 60 + fontsize/1.8 per character of "[scb_year]" wide (157 px for
+        // "[scb_year ]" before #11 dropped the trailing space).
+        expect(await loadedSize(img)).toEqual({ w: 148, h: 46 });
         // The text around it is untouched.
         await expect(editor(page).locator('body p')).toContainText('Before');
         await expect(editor(page).locator('body p')).toContainText('after');

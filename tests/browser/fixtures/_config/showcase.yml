@@ -1,0 +1,16 @@
+---
+Name: scb-showcase-fixtures
+After: '#shortcodable'
+Only:
+  envvarset: SCB_README_SHOWCASE
+---
+# BROWSER-TEST FIXTURE ONLY - the README screenshots' demo shortcodes (ScbShowcase*). Registered
+# only when SCB_README_SHOWCASE is set (tests/browser/screenshots/README.md sets it through
+# BROWSER_ENV), so the browser specs and CI, which check the dialog's list option by option, never
+# see them.
+Shortcodable\Shortcodable:
+  shortcodable_classes:
+    - Restruct\ScbBrowser\ScbShowcaseYear
+    - Restruct\ScbBrowser\ScbShowcaseButton
+    - Restruct\ScbBrowser\ScbShowcaseContact
+    - Restruct\ScbBrowser\ScbShowcaseSignup

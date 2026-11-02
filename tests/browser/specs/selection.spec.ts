@@ -6,38 +6,55 @@ import { test, expect, editor, newPage, openDialog, openPage } from './support';
 // any CMS editor, so parsing it must never create live elements in the CMS document: attributes
 // are data, not markup.
 
-/** Select everything in the Content editor (the one paragraph the fixture page holds). */
+/**
+ * Select the text of the Content editor's one paragraph (not the paragraph itself), through
+ * TinyMCE's own selection API. A keyboard select-all is platform-dependent: Meta+A on macOS selects
+ * the text, Control+A on Linux (CI) selects the whole <p>, whose content then does not start with
+ * '[' and is never parsed, so a spec relying on it passed without testing anything.
+ */
 async function selectAll(page: Page): Promise<void> {
     await editor(page).locator('body p').click();
-    await page.keyboard.press('ControlOrMeta+a');
+    await page.evaluate(() => {
+        const ed = (window as any).tinyMCE.activeEditor;
+        const text = ed.getBody().querySelector('p').firstChild;
+        const rng = ed.dom.createRng();
+        rng.setStart(text, 0);
+        rng.setEnd(text, text.length);
+        ed.selection.setRng(rng);
+    });
 }
 
 test.describe('Selected shortcode attributes', () => {
-    test('are read as data: handler attributes never run and nothing is fetched', async ({ page }) => {
-        // An unregistered name with an event-handler attribute and a src, typed as text. A data: URL
-        // that is not an image makes an <img> fail without any network request, so on a live element
-        // the handler would fire within a tick; the second src would be fetched from this host.
-        const { id } = await newPage(
-            page,
-            '<p>[img src="data:," onerror="window.__scbProbe = 1"] [img src="/scb-probe-fetch.png"]</p>',
-        );
-        await openPage(page, id);
+    // Unregistered names typed as text. A data: URL that is not an image makes an <img> fail without
+    // any network request, so on a live element the handler would fire within a tick; the second
+    // case's src would be fetched from this host. One shortcode per case: the selection is parsed
+    // as a single shortcode, so a second one in the same text would only add junk attributes.
+    for (const [label, content] of [
+        ['a handler attribute never runs', '<p>[img src="data:," onerror="window.__scbProbe = 1"]</p>'],
+        ['a src is never fetched', '<p>[img src="/scb-probe-fetch.png"]</p>'],
+    ]) {
+        test(`are read as data: ${label}`, async ({ page }) => {
+            const { id } = await newPage(page, content);
+            await openPage(page, id);
 
-        const fetched: string[] = [];
-        page.on('request', (r) => {
-            if (r.url().includes('scb-probe-fetch')) {
-                fetched.push(r.url());
-            }
+            const fetched: string[] = [];
+            page.on('request', (r) => {
+                if (r.url().includes('scb-probe-fetch')) {
+                    fetched.push(r.url());
+                }
+            });
+
+            await selectAll(page);
+            const posted = new URLSearchParams(await openDialog(page));
+            // The selection was parsed at all (else the checks below pass without testing anything).
+            expect(posted.get('ShortcodeType'), 'the selected shortcode was parsed').toBe('img');
+            // Give an error event (and a fetch) time to happen if an element was created.
+            await page.waitForTimeout(750);
+
+            expect(await page.evaluate(() => (window as any).__scbProbe), 'the onerror attribute did not run').toBeUndefined();
+            expect(fetched, 'the src attribute was not fetched').toEqual([]);
         });
-
-        await selectAll(page);
-        await openDialog(page);
-        // Give an error event (and a fetch) time to happen if an element was created.
-        await page.waitForTimeout(750);
-
-        expect(await page.evaluate(() => (window as any).__scbProbe), 'the onerror attribute did not run').toBeUndefined();
-        expect(fetched, 'the src attribute was not fetched').toEqual([]);
-    });
+    }
 
     test('quoted, unquoted, entity and non-ASCII values are parsed as before', async ({ page }) => {
         const { id } = await newPage(

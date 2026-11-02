@@ -7,8 +7,13 @@ the `shortcodable_classes` config, and the methods a shortcodable class implemen
 
 ### From 4.x on Silverstripe 5
 
-Change the constraint from `^4` (or `~4.0`) to `^5.1`. Nothing else is required: simpler stays on its
-`0.x` line (`~0.2`), and the dialog is loaded the same way as on 4.0.16.
+Change the constraint from `^4` (or `~4.0`) to `^5.1`. Nothing else is required. The dialog is loaded
+the same way as on 4.0.16.
+
+simpler is required as `~0.2 || ^1`, and simpler 1.x supports Silverstripe 5 as well as 6 (1.0.0
+requires `silverstripe/framework ^5 || ^6`). So a fresh install on Silverstripe 5, or a `composer
+update` that includes simpler, gets simpler 1.x. `~0.2` only lets a project that already has simpler
+0.2 or 0.3 keep it.
 
 Differences you may notice:
 

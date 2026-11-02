@@ -1,5 +1,26 @@
 # Changelog
 
+## 5.2.1 (2026-11-02)
+
+### Fixed
+
+- **The attributes of a shortcode selected in the editor are parsed without creating DOM nodes.**
+  Opening the dialog on a selected shortcode built it as an element in the CMS document to read its
+  attributes. They are now parsed in an inert document; values, entities and lower-cased attribute
+  names come out as before. Upgrading is recommended.
+- **Shortcode names with digits are matched whole** (#11). The placeholder pattern stopped a name at
+  its first digit, so `[year2]` was taken for `[year]` with an attribute `2` and saved back as
+  `[year 2]`, and a registered name such as `h2_title` got no placeholder. Names are now matched as
+  Silverstripe's `ShortcodeParser` matches them (`\w+`, ending at whitespace or `]`).
+  **Behaviour change:** a shortcode without attributes has no trailing space in its placeholder
+  title and `?sc=` any more (`[year]`, was `[year ]`), so its default placeholder is one character
+  narrower.
+
+### Changed
+
+- `composer.json` declares the licence as MIT, as `license.md` already did.
+- UPGRADING: a fresh Silverstripe 5 install gets simpler 1.x; `~0.2` only keeps an existing 0.2/0.3.
+
 ## 5.2.0 (2026-10-11)
 
 ### Changed

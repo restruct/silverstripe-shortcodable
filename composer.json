@@ -1,10 +1,16 @@
 {
     "name": "restruct/silverstripe-shortcodable",
-    "description": "Provides a simple button to insert Shortcodes into the HTMLEditorField + an API for developers to define shortcodes",
+    "description": "A shortcode button and dialog for the Silverstripe WYSIWYG editor: CMS editors pick, fill in and edit shortcodes, shown as placeholder images, and developers make any class or DataObject shortcodable.",
     "type": "silverstripe-vendormodule",
     "keywords": [
         "silverstripe",
-        "shortcode"
+        "silverstripe-module",
+        "silverstripe-cms",
+        "shortcode",
+        "shortcodes",
+        "tinymce",
+        "wysiwyg",
+        "htmleditor"
     ],
     "license": "BSD-3-Clause",
     "authors": [

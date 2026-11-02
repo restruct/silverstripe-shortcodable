@@ -1,10 +1,13 @@
 ---
 Name: scb-browser-fixtures
 After: '#shortcodable'
+Except:
+  envvarset: SCB_README_SHOWCASE
 ---
 # BROWSER-TEST FIXTURE ONLY - copied to the scratch host's app/_config/browser-fixtures/ by the
 # runner (fixture YAML in app/src would never be read). Registers the fixture shortcodes the way a
-# project does, through config.
+# project does, through config. Not on a README screenshot host (SCB_README_SHOWCASE set), whose
+# dialog lists only the showcase shortcodes (showcase.yml).
 Shortcodable\Shortcodable:
   shortcodable_classes:
     - Restruct\ScbBrowser\ScbYearShortcode

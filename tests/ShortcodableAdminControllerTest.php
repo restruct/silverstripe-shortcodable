@@ -185,6 +185,23 @@ class ShortcodableAdminControllerTest extends FunctionalTest
         $this->assertEquals(77, $query['h']);
     }
 
+    public function testPlaceholderForADeletedRecordFallsBackToTheClassSingleton()
+    {
+        // An ObjectID whose record no longer exists (deleted after the shortcode was inserted) must not
+        // end in a 500 from calling a method on null (#6): the class singleton answers instead, here
+        // with the default SVG placeholder, as for a request without an ObjectID.
+        $missingId = 999999;
+        $this->assertNull(ShortcodableRecord::get()->byID($missingId));
+
+        $this->logInAsCmsUser();
+        $this->autoFollowRedirection = false;
+        $response = $this->get('admin/shortcodable/placeholder/sc_record/' . $missingId . '?sc='
+            . urlencode('[sc_record id="' . $missingId . '"]'));
+
+        $this->assertSame(302, $response->getStatusCode());
+        $this->assertSame('[sc_record id="' . $missingId . '"]', $this->redirectQuery($response)['txt']);
+    }
+
     public function testPlaceholderForAnUnknownShortcodeIsEmpty()
     {
         $this->logInAsCmsUser();

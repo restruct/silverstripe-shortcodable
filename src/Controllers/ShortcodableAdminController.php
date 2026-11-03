@@ -153,9 +153,13 @@ class ShortcodableAdminController
             return;
         }
 
+        $object = null;
         if ($object_id && is_subclass_of($sc_class, DataObject::class)) {
             $object = $sc_class::get()->byID($object_id);
-        } else {
+        }
+        # No ObjectID, not a DataObject, or a record that no longer exists (deleted after the shortcode was
+        # inserted): the class singleton answers, so the editor gets a placeholder instead of a 500 (#6)
+        if (!$object) {
             $object = singleton($sc_class);
         }
 

@@ -2,6 +2,7 @@
 
 namespace Shortcodable;
 
+use LogicException;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Config\Configurable;
@@ -39,7 +40,10 @@ class Shortcodable
             $parseMethodName = Config::inst()->get($class, 'shortcode_callback') ?: 'parse_shortcode';
 
             if (!singleton($class)->hasMethod($parseMethodName)) {
-                user_error("Failed to register \"$class\" with Shortcodable: missing/unconfigured shortcode parser method (looked for: $parseMethodName)", E_USER_ERROR);
+                # An exception rather than user_error(..., E_USER_ERROR): PHP 8.4 deprecates passing E_USER_ERROR to
+                # trigger_error() (#5). Same message; it still stops the request, on every request, until fixed.
+//                user_error("Failed to register \"$class\" with Shortcodable: missing/unconfigured shortcode parser method (looked for: $parseMethodName)", E_USER_ERROR);
+                throw new LogicException("Failed to register \"$class\" with Shortcodable: missing/unconfigured shortcode parser method (looked for: $parseMethodName)");
             }
 //            if (!$shortcode = Config::inst()->get($class, 'shortcode')) {
 //                user_error("Registering \"$class\" with short classname as shortcode: missing \$shortcode config value", E_USER_NOTICE);

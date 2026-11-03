@@ -110,8 +110,8 @@ Implement these methods on your shortcodable classes (they may also be added via
 **NOTE: the parser method gets called on a singleton object instance.**<br />
    (So there's no `$this->ID` or `$this->owner->ID` etc.)
 
-A registered class without its parser method is a fatal error (`E_USER_ERROR`) when the
-shortcodes are registered, on every request.
+A registered class without its parser method throws a `LogicException` when the shortcodes are
+registered, so every request fails until it is fixed (up to 5.2.1 this was a fatal `E_USER_ERROR`).
 
 A plain class (not a DataObject) needs the `Extensible` trait: the module checks methods with
 `hasMethod()`, which comes from that trait (`DataObject` and `ViewableData`/`ModelData` subclasses

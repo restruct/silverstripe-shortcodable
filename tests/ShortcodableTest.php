@@ -5,6 +5,7 @@ namespace Shortcodable\Tests;
 use Shortcodable\Shortcodable;
 use Shortcodable\Tests\Stub\BlockShortcode;
 use Shortcodable\Tests\Stub\CustomCallbackShortcode;
+use Shortcodable\Tests\Stub\MissingParserShortcode;
 use Shortcodable\Tests\Stub\ShortcodableRecord;
 use Shortcodable\Tests\Stub\SimpleShortcode;
 use SilverStripe\Admin\LeftAndMain;
@@ -73,6 +74,19 @@ class ShortcodableTest extends SapphireTest
         Shortcodable::register_class('Shortcodable\\Tests\\Stub\\DoesNotExist');
 
         $this->assertSame($before, ShortcodeParser::get()->getRegisteredShortcodes());
+    }
+
+    public function testRegisterClassWithoutItsParserMethodThrows()
+    {
+        // A LogicException, not user_error(..., E_USER_ERROR): PHP 8.4 deprecates passing E_USER_ERROR
+        // to trigger_error() (#5). The message stays the same, so it still names the class and method.
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage(
+            'Failed to register "' . MissingParserShortcode::class . '" with Shortcodable: '
+            . 'missing/unconfigured shortcode parser method (looked for: parse_shortcode)'
+        );
+
+        Shortcodable::register_class(MissingParserShortcode::class);
     }
 
     public function testRegisterClassesRegistersEachClass()

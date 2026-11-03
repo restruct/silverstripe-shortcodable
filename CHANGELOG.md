@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.2.2 (2026-11-03)
+
+### Fixed
+
+- **The placeholder of a shortcode whose record was deleted no longer ends in a 500** (#6). The
+  placeholder endpoint looked the `ObjectID` up with `byID()` and called a method on the result, which
+  is `null` once the record is gone. The class singleton now answers instead, as it already did for a
+  shortcode without an ID, so the editor shows a placeholder.
+
+### Changed
+
+- **A shortcodable class without its parser method throws a `LogicException`** (#5), with the same
+  message, instead of `user_error(..., E_USER_ERROR)`, which PHP 8.4 deprecates.
+  **Behaviour change:** on a misconfigured site this is now an uncaught (but catchable) exception
+  instead of a fatal error; every request still fails until the class is fixed.
+
 ## 5.2.1 (2026-11-02)
 
 ### Security
